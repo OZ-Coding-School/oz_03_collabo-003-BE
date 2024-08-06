@@ -1,4 +1,4 @@
-# 냉똑이 : 냉장고를 똑똑하게! (Back-End)
+# ALL THE (Back-End)
 ![GitHub Created At](https://img.shields.io/github/created-at/OZ-Coding-School/oz_03_collabo-003-BE)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/OZ-Coding-School/oz_03_collabo-003-BE)
 ![GitHub last commit](https://img.shields.io/github/last-commit/OZ-Coding-School/oz_03_collabo-003-BE)
