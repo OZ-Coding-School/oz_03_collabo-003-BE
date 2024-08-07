@@ -7,48 +7,65 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0001_initial'),
-        ('auth', '0012_alter_user_first_name_max_length'),
+        ("accounts", "0001_initial"),
+        ("auth", "0012_alter_user_first_name_max_length"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='refreshtoken',
-            options={'verbose_name': 'refresh token', 'verbose_name_plural': 'refresh tokens'},
+            name="refreshtoken",
+            options={
+                "verbose_name": "refresh token",
+                "verbose_name_plural": "refresh tokens",
+            },
         ),
         migrations.AlterModelOptions(
-            name='user',
-            options={'permissions': [], 'verbose_name': 'user', 'verbose_name_plural': 'users'},
+            name="user",
+            options={
+                "permissions": [],
+                "verbose_name": "user",
+                "verbose_name_plural": "users",
+            },
         ),
         migrations.RemoveField(
-            model_name='user',
-            name='nickname',
+            model_name="user",
+            name="nickname",
         ),
         migrations.RemoveField(
-            model_name='user',
-            name='profile_image',
+            model_name="user",
+            name="profile_image",
         ),
         migrations.AlterField(
-            model_name='user',
-            name='groups',
-            field=models.ManyToManyField(blank=True, related_name='custom_user_set', to='auth.group'),
+            model_name="user",
+            name="groups",
+            field=models.ManyToManyField(
+                blank=True, related_name="custom_user_set", to="auth.group"
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='user_permissions',
-            field=models.ManyToManyField(blank=True, related_name='custom_user_permissions_set', to='auth.permission'),
+            model_name="user",
+            name="user_permissions",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="custom_user_permissions_set",
+                to="auth.permission",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='refreshtoken',
-            constraint=models.UniqueConstraint(fields=('token',), name='unique_refresh_token'),
+            model_name="refreshtoken",
+            constraint=models.UniqueConstraint(
+                fields=("token",), name="unique_refresh_token"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='user',
-            constraint=models.UniqueConstraint(fields=('email',), name='unique_email'),
+            model_name="user",
+            constraint=models.UniqueConstraint(fields=("email",), name="unique_email"),
         ),
         migrations.AddConstraint(
-            model_name='user',
-            constraint=models.UniqueConstraint(fields=('username',), name='unique_username'),
+            model_name="user",
+            constraint=models.UniqueConstraint(
+                fields=("username",), name="unique_username"
+            ),
         ),
     ]
