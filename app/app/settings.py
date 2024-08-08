@@ -14,10 +14,15 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+<<<<<<< HEAD
 from django.core.wsgi import get_wsgi_application
 from dotenv import load_dotenv
 
 application = get_wsgi_application()
+=======
+from dotenv import load_dotenv
+
+>>>>>>> 456bd42e8b974c5740379153839592e2e4f5b771
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,8 +44,13 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+<<<<<<< HEAD
     "django.contrib.auth",
     "django.contrib.admin",
+=======
+    "django.contrib.admin",
+    "django.contrib.auth",
+>>>>>>> 456bd42e8b974c5740379153839592e2e4f5b771
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -60,6 +70,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "accounts.middleware.JWTAuthenticationMiddleware",
+<<<<<<< HEAD
+=======
+    "accounts.middleware.JWTAuthenticationMiddleware",
+>>>>>>> 456bd42e8b974c5740379153839592e2e4f5b771
 ]
 
 ROOT_URLCONF = "app.urls"
@@ -160,7 +174,10 @@ LOGGING = {
 }
 
 # SMTP 이메일
+<<<<<<< HEAD
 # 회원가입 및 비밀번호 재설정 할때 이메일 보내는 sender
+=======
+>>>>>>> 456bd42e8b974c5740379153839592e2e4f5b771
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"  # Gmail SMTP 서버 주소
 EMAIL_PORT = 587  # Gmail SMTP 포트

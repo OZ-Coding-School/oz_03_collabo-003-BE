@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import BasePermission  # Import IsAuthenticated
+from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,25 +21,109 @@ from .serializers import UserSerializer
 User = get_user_model()
 
 
-# UserSerializer를 사용하여 유효한 사용자 데이터를 받아 새 사용자를 생성
-class RegisterView(APIView):
+class RegisterRequestView(APIView):
     def post(self, request):
         """
-        사용자 등록 API
-        - 데이터 유효성 검사 후 사용자 생성
+        회원가입 요청 API
+        - 이메일로 회원가입 확인 링크 발송
         """
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        email = serializer.validated_data.get("email")
+
+        user = User.objects.filter(email=email).first()
+        if user:
+            return Response(
+                {"detail": "이미 존재하는 이메일입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payload = {
+            "email": email,
+            "exp": timezone.now() + datetime.timedelta(hours=1),
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+        registration_url = request.build_absolute_uri(
+            reverse("registration-confirm") + f"?token={token}"
+        )
+
+        # 이메일 발송
+        send_mail(
+            "회원가입 확인",
+            f"안녕하세요,\n\n회원가입을 완료하려면 다음 링크를 클릭하십시오:\n{registration_url}\n\n링크는 1시간 동안 유효합니다.",
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+        )
+
+        return Response({"detail": "회원가입 확인 이메일을 전송했습니다."})
 
 
-# 사용자의 이메일과 비밀번호를 검증하여 JWT 액세스 토큰과 리프레시 토큰을 발급
+class RegistrationConfirmView(APIView):
+    def get(self, request):
+        """
+        회원가입 확인 API
+        - 유효한 이메일 인증 토큰을 통해 사용자를 활성화하고 회원가입을 완료합니다.
+        """
+        token = request.query_params.get("token")
+        if not token:
+            return Response(
+                {"detail": "Token is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            email = payload.get("email")
+            if not email:
+                return Response(
+                    {"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 이메일로 사용자 검색
+            user = User.objects.filter(email=email).first()
+            if not user:
+                # 사용자가 존재하지 않으면 새 사용자 생성
+                # 비밀번호와 기타 정보는 초기화하거나 기본 값을 설정
+                serializer = UserSerializer(
+                    data={"email": email, "password": "defaultpassword"}
+                )
+                if serializer.is_valid():
+                    user = serializer.save()
+                    user.is_active = True
+                    user.save()
+                else:
+                    return Response(
+                        serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                # 사용자 존재 시, 활성화 처리
+                if user.is_active:
+                    return Response(
+                        {"detail": "User already active"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                user.is_active = True
+                user.save()
+
+            return Response(
+                {"detail": "회원가입이 완료되었습니다."}, status=status.HTTP_200_OK
+            )
+
+        except jwt.ExpiredSignatureError:
+            return Response(
+                {"detail": "토큰이 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except jwt.InvalidTokenError:
+            return Response(
+                {"detail": "유효하지 않은 토큰입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
 class LoginView(APIView):
     def post(self, request):
         """
-        로그인 API
-        - 이메일과 비밀번호로 사용자 인증 후 JWT 토큰과 리프레시 토큰 발급
+        Login API.
+        - Authenticates user with email and password, and issues JWT and refresh tokens.
         """
         email = request.data.get("email")
         password = request.data.get("password")
@@ -48,7 +132,7 @@ class LoginView(APIView):
         if user is None or not user.check_password(password):
             raise AuthenticationFailed("Invalid email or password")
 
-        # 액세스 토큰 생성
+        # Access Token
         payload = {
             "id": user.id,
             "exp": timezone.now() + datetime.timedelta(days=7),
@@ -56,11 +140,10 @@ class LoginView(APIView):
         }
         access_token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
-        # 리프레시 토큰 생성
+        # Refresh Token
         expires_at = timezone.now() + datetime.timedelta(days=30)
         refresh_token = RefreshToken.objects.create(user=user, expires_at=expires_at)
 
-        # 응답 생성
         response = Response(
             {
                 "id": user.id,
@@ -68,7 +151,6 @@ class LoginView(APIView):
                 "username": user.username,
             }
         )
-        # 쿠키에 토큰 세팅
         response.set_cookie(
             key="jwt",
             value=access_token,
@@ -85,12 +167,11 @@ class LoginView(APIView):
         return response
 
 
-# 쿠키에 저장된 JWT 토큰을 통해 인증을 받은 후 현재 인증된 사용자의 정보를 반환
 class UserView(APIView):
     def get(self, request):
         """
-        사용자 정보 조회 API
-        - JWT 토큰을 통해 인증된 사용자 정보 반환
+        Retrieve user information API.
+        - Returns user information based on JWT token.
         """
         token = request.COOKIES.get("jwt")
         if not token:
@@ -110,12 +191,11 @@ class UserView(APIView):
         return Response(serializer.data)
 
 
-# 쿠키에서 JWT 액세스 토큰과 리프레시 토큰을 삭제
 class LogoutView(APIView):
     def post(self, request):
         """
-        로그아웃 API
-        - JWT 토큰 및 리프레시 토큰 쿠키 삭제
+        Logout API.
+        - Deletes JWT and refresh token cookies.
         """
         response = Response({"message": "Successfully logged out"})
         response.delete_cookie("jwt")
@@ -123,13 +203,12 @@ class LogoutView(APIView):
         return response
 
 
-# 유효한 리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급
 class RefreshTokenView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure IsAuthenticated is imported
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
-        새로운 액세스 토큰을 발급하는 API
+        Issue a new access token API.
         """
         refresh_token = request.data.get("refresh_token")
         try:
@@ -159,7 +238,6 @@ class RefreshTokenView(APIView):
             )
 
 
-# 쿠키에 저장된 JWT 토큰을 확인하고 유효성을 검증하여 요청 객체의 user 속성에 사용자 정보를 설정
 class CookieAuthentication(BasePermission):
     def has_permission(self, request, view):
         token = request.COOKIES.get("jwt")
@@ -178,15 +256,13 @@ class CookieAuthentication(BasePermission):
             raise AuthenticationFailed("User not found.")
 
 
-# 계정 삭제 후 JWT 토큰을 쿠키에서 제거
 class DeleteAccountView(APIView):
     permission_classes = [CookieAuthentication]
 
     def delete(self, request):
         """
-        회원 탈퇴 API
-        - JWT 토큰을 통해 인증된 사용자만 사용 가능
-        - 인증된 사용자의 계정을 삭제합니다.
+        Delete account API.
+        - Only available to authenticated users.
         """
         token = request.COOKIES.get("jwt")
         if not token:
@@ -219,12 +295,11 @@ class DeleteAccountView(APIView):
             )
 
 
-# 사용자에게 비밀번호 재설정 링크를 포함한 이메일을 발송
 class PasswordResetRequestView(APIView):
     def post(self, request):
         """
-        비밀번호 재설정 요청 API
-        - 이메일을 통해 비밀번호 재설정 링크를 포함한 이메일 발송
+        Password reset request API.
+        - Sends a password reset link to the user's email.
         """
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -247,7 +322,7 @@ class PasswordResetRequestView(APIView):
             reverse("password-reset-confirm") + f"?token={token}"
         )
 
-        # 이메일 발송
+        # Send email
         send_mail(
             "Password Reset Request",
             f"Hello,\n\nYou requested a password reset. Click the following link to reset your password:\n{reset_url}\n\nIf you did not request this, please ignore this email.",
@@ -258,7 +333,6 @@ class PasswordResetRequestView(APIView):
         return Response({"reset_url": reset_url})
 
 
-# 비밀번호 재설정 토큰을 검증하고, 사용자의 비밀번호를 새 비밀번호로 변경
 class PasswordResetConfirmView(APIView):
     def post(self, request):
         """
