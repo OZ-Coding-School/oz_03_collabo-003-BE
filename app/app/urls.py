@@ -21,9 +21,5 @@ from django.urls import path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-<<<<<<< HEAD
     path("accounts/", include("accounts.urls")),  # 계정
-=======
-    path("accounts/", include("accounts.urls")),
->>>>>>> 456bd42e8b974c5740379153839592e2e4f5b771
 ]

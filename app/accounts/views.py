@@ -78,11 +78,8 @@ class RegistrationConfirmView(APIView):
                     {"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # 이메일로 사용자 검색
             user = User.objects.filter(email=email).first()
             if not user:
-                # 사용자가 존재하지 않으면 새 사용자 생성
-                # 비밀번호와 기타 정보는 초기화하거나 기본 값을 설정
                 serializer = UserSerializer(
                     data={"email": email, "password": "defaultpassword"}
                 )
@@ -95,7 +92,6 @@ class RegistrationConfirmView(APIView):
                         serializer.errors, status=status.HTTP_400_BAD_REQUEST
                     )
             else:
-                # 사용자 존재 시, 활성화 처리
                 if user.is_active:
                     return Response(
                         {"detail": "User already active"},
@@ -122,8 +118,8 @@ class RegistrationConfirmView(APIView):
 class LoginView(APIView):
     def post(self, request):
         """
-        Login API.
-        - Authenticates user with email and password, and issues JWT and refresh tokens.
+        로그인 API
+        - 이메일과 비밀번호로 사용자 인증 후 JWT 토큰과 리프레시 토큰 발급
         """
         email = request.data.get("email")
         password = request.data.get("password")
@@ -151,6 +147,7 @@ class LoginView(APIView):
                 "username": user.username,
             }
         )
+        # 쿠키에 토큰 세팅
         response.set_cookie(
             key="jwt",
             value=access_token,
@@ -170,8 +167,8 @@ class LoginView(APIView):
 class UserView(APIView):
     def get(self, request):
         """
-        Retrieve user information API.
-        - Returns user information based on JWT token.
+        사용자 정보 조회 API
+        - JWT 토큰을 통해 인증된 사용자 정보 반환
         """
         token = request.COOKIES.get("jwt")
         if not token:
@@ -194,8 +191,8 @@ class UserView(APIView):
 class LogoutView(APIView):
     def post(self, request):
         """
-        Logout API.
-        - Deletes JWT and refresh token cookies.
+        로그아웃 API
+        - JWT 토큰 및 리프레시 토큰 쿠키 삭제
         """
         response = Response({"message": "Successfully logged out"})
         response.delete_cookie("jwt")
@@ -208,7 +205,7 @@ class RefreshTokenView(APIView):
 
     def post(self, request):
         """
-        Issue a new access token API.
+        새로운 액세스 토큰을 발급하는 API
         """
         refresh_token = request.data.get("refresh_token")
         try:
@@ -261,8 +258,9 @@ class DeleteAccountView(APIView):
 
     def delete(self, request):
         """
-        Delete account API.
-        - Only available to authenticated users.
+        회원 탈퇴 API
+        - JWT 토큰을 통해 인증된 사용자만 사용 가능
+        - 인증된 사용자의 계정을 삭제합니다.
         """
         token = request.COOKIES.get("jwt")
         if not token:
@@ -298,8 +296,8 @@ class DeleteAccountView(APIView):
 class PasswordResetRequestView(APIView):
     def post(self, request):
         """
-        Password reset request API.
-        - Sends a password reset link to the user's email.
+        비밀번호 재설정 요청 API
+        - 이메일을 통해 비밀번호 재설정 링크를 포함한 이메일 발송
         """
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
