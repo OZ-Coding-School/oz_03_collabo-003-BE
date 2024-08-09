@@ -4,6 +4,7 @@ from django.utils.deprecation import MiddlewareMixin
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+
 class JWTAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """

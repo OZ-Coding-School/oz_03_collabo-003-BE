@@ -1,4 +1,5 @@
 import datetime
+
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -7,14 +8,18 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import RefreshToken
-from .serializers import PasswordResetConfirmSerializer, PasswordResetRequestSerializer, UserSerializer
+from .serializers import PasswordResetConfirmSerializer
+from .serializers import PasswordResetRequestSerializer
+from .serializers import UserSerializer
 
 User = get_user_model()
+
 
 class UserRegistrationView(APIView):
     def post(self, request):
@@ -167,6 +172,7 @@ class UserLoginView(APIView):
 
         return response
 
+
 class UserProfileView(APIView):
     def get(self, request):
         """
@@ -192,6 +198,7 @@ class UserProfileView(APIView):
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
+
 class UserLogoutView(APIView):
     def post(self, request):
         """
@@ -202,6 +209,7 @@ class UserLogoutView(APIView):
         response.delete_cookie("jwt")
         response.delete_cookie("refresh_token")
         return response
+
 
 class RefreshTokenView(APIView):
     permission_classes = [IsAuthenticated]
@@ -240,13 +248,14 @@ class RefreshTokenView(APIView):
                 {"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED
             )
 
+
 class PasswordResetView(APIView):
     def post(self, request):
         """
         비밀번호 재설정 요청 및 확인 API
         - 비밀번호 재설정 링크 발송 및 비밀번호 재설정
         """
-        if 'token' in request.data:
+        if "token" in request.data:
             return self.reset_password(request)
         else:
             return self.request_reset(request)
@@ -322,6 +331,7 @@ class PasswordResetView(APIView):
                 {"detail": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST
             )
 
+
 class UserAccountView(APIView):
     permission_classes = [CookieAuthentication]
 
@@ -361,6 +371,7 @@ class UserAccountView(APIView):
             return Response(
                 {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
             )
+
 
 class CookieAuthentication(BasePermission):
     def has_permission(self, request, view):
