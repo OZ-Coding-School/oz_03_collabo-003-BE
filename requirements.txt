@@ -1,0 +1,6 @@
+Django==5.0.8
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.0.0
+pycopg2-binary==2.9.6
+black
+isort
