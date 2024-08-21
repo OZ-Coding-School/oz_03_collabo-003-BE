@@ -37,6 +37,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # 계정
+    path("accounts/", include("accounts.urls")), 
     # Swagger UI
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('swagger.<format>', schema_view.without_ui(cache_timeout=0), name='schema-json'),  # format: json or yaml
