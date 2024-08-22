@@ -330,6 +330,8 @@ class PasswordResetView(APIView):
             return Response(
                 {"detail": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
 class CookieAuthentication(BasePermission):
     def has_permission(self, request, view):
         """
@@ -351,6 +353,7 @@ class CookieAuthentication(BasePermission):
             raise AuthenticationFailed("Invalid token.")
         except User.DoesNotExist:
             raise AuthenticationFailed("User not found.")
+
 
 class UserAccountView(APIView):
     permission_classes = [CookieAuthentication]
@@ -391,6 +394,3 @@ class UserAccountView(APIView):
             return Response(
                 {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
             )
-
-
-
