@@ -47,6 +47,7 @@ class User(AbstractUser):
         default="user",
     )
     business_number = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=255, blank=True, null=True)
     social_id = models.CharField(max_length=255, blank=True, null=True)
     refresh_token = models.CharField(max_length=255, blank=True, null=True)
     points = models.IntegerField(default=0)
