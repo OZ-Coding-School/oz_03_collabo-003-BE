@@ -14,17 +14,43 @@ class User(AbstractUser):
     """
     사용자 모델
     - 기본 Django `AbstractUser` 모델을 확장하여 이메일을 로그인 필드로 사용하며,
-      인증 제공자와 생성 일자를 추가합니다.
+    인증 제공자와 생성 일자를 추가합니다.
     """
 
     email = models.EmailField(unique=True)  # 이메일 필드, 이메일이 유일해야 함
-    provider = models.CharField(max_length=100)  # 인증 제공자 (예: Google, Facebook)
+    # provider 필드는 social_provider 필드로 변경
+    social_provider = models.CharField(
+        max_length=100,
+        choices=[
+            ("kakao", "카카오"),
+            ("naver", "네이버"),
+            ("google", "구글"),
+        ],
+        blank=True,
+        null=True,
+    )  # 인증 제공자 (예: Google, Facebook)
     username = models.CharField(
         max_length=150, blank=True, null=True, unique=True
     )  # 사용자 이름, 공백 및 null 허용
     created_at = models.DateTimeField(
         default=timezone.now
     )  # 생성 일자, 기본값은 현재 시간
+
+    # 추가된 필드
+    role = models.CharField(
+        max_length=255,
+        choices=[
+            ("user", "일반 사용자"),
+            ("analyst", "분석가"),
+            ("client", "의뢰자"),
+        ],
+        default="user",
+    )
+    business_number = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=255, blank=True, null=True)
+    social_id = models.CharField(max_length=255, blank=True, null=True)
+    refresh_token = models.CharField(max_length=255, blank=True, null=True)
+    points = models.IntegerField(default=0)
 
     USERNAME_FIELD = "email"  # 기본 로그인 필드를 이메일로 설정
     REQUIRED_FIELDS = []  # 슈퍼유저 생성 시 추가 필드 없음
