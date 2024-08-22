@@ -1,0 +1,11 @@
+
+services:
+  web:
+    build: .  # 현재 디렉토리의 Dockerfile을 사용하여 빌드
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./allthe:/app  # 현재 디렉토리와 컨테이너 내부 /app 디렉토리를 연결
+    ports:
+      - "8000:8000"  # 호스트 8000 포트와 컨테이너 8000 포트를 연결
+    env_file:
+      - .env  # 환경 변수 파일 (.env 파일 필요 시 추가)
