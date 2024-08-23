@@ -2,7 +2,7 @@ name: Django CI/CD
 
 on:
   push:
-    branches: [ '*' ]  # 모든 브랜치에 푸시될 때 CI 작업의 일부 실행
+    branches: [ '*' ]  # 모든 브랜치에 푸시될 때 CI 실행
   pull_request:
     branches: [ develop ]  # develop 브랜치에 대한 pull request가 merge될 때 CD 실행
     types: [ closed ]
@@ -23,6 +23,13 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
 
     - name: Build and run tests
+      env: 
+        DB_ENGINE: ${{ secrets.DB_ENGINE }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
       run: |
         # .env 파일 생성
         echo "DB_ENGINE=$DB_ENGINE" >> .env
@@ -32,11 +39,11 @@ jobs:
         echo "DB_HOST=$DB_HOST" >> .env
         echo "DB_PORT=$DB_PORT" >> .env
 
-        # docker-compose를 사용하여 빌드 및 서버 실행 (이미지에 태그 추가)
-        docker-compose up -d --build -t allthe:latest
+        # docker-compose를 사용하여 빌드 및 서버 실행 (이미지 이름은 docker-compose.yml에서 설정)
+        docker-compose up -d --build 
 
         # Django 서버가 뜰 때까지 대기 (wait-for-it.sh 사용)
-        ./wait-for-it.sh localhost:8000 -- echo "Django server is up!"
+        ./wait-for-it.sh localhost:8000 -- echo "Django server is up!" 
 
         # Django 서버 응답 확인 (curl 사용)
         curl -s http://localhost:8000 > /dev/null
@@ -52,15 +59,6 @@ jobs:
 
         # .env 파일 삭제
         rm .env
-
-    - name: Build and push Docker image
-      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true  # PR이 merge 되었을 때만 실행
-      run: |
-        # Docker Hub 로그인 정보 설정 (GitHub Actions Secrets에서 가져오기)
-        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-        # Docker 이미지 푸시 (이미 태그가 붙어있으므로 tag 명령 불필요)
-        docker push ${{ secrets.DOCKER_USERNAME }}/allthe:latest
 
   deploy:  # CD 작업
     runs-on: ubuntu-latest
@@ -78,7 +76,7 @@ jobs:
         DB_PORT: ${{ secrets.DB_PORT }}
         NCP_SERVER_IP: ${{ secrets.NCP_SERVER_IP }}
         NCP_SSH_PRIVATE_KEY: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-        DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/allthe:latest  # Docker Hub 이미지 이름
+        REPO_URL: ${{ secrets.REPO_URL }} # 레포지토리 URL 추가
       run: |
         # SSH 키 등록
         mkdir -p ~/.ssh
@@ -90,8 +88,15 @@ jobs:
           # 작업 디렉토리 설정 (디렉토리 생성 포함)
           mkdir -p /home/ubuntu/oz_03_collabo-003-BE && \
           cd /home/ubuntu/oz_03_collabo-003-BE && \
-          # 저장소 업데이트 (git pull)
-          git pull origin develop && \
+
+          # 레포지토리가 존재하지 않으면 clone, 존재하면 pull
+          if [ ! -d .git ]; then
+            git clone $REPO_URL .
+            git checkout develop
+          else
+            git pull origin develop
+          fi
+
           # .env 파일 생성 (heredoc 사용, NCP 서버에서 실행)
           cat <<EOF > .env
           DB_ENGINE=$DB_ENGINE
@@ -101,8 +106,7 @@ jobs:
           DB_HOST=$DB_HOST
           DB_PORT=$DB_PORT
           EOF && \
-          # Docker 이미지 pull
-          docker-compose pull $DOCKER_IMAGE_NAME && \
-          # 배포 스크립트 실행 (Docker 이미지 이름 전달)
-          bash ./deploy.sh $DOCKER_IMAGE_NAME
+
+          # 배포 스크립트 실행 
+          bash ./deploy.sh
         "
