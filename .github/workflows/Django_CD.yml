@@ -1,4 +1,4 @@
-name: Django CD (Test)
+name: Django CD
 
 on:
   push:
@@ -30,18 +30,14 @@ jobs:
         DB_HOST: ${{ secrets.DB_HOST }}
         DB_PORT: ${{ secrets.DB_PORT }}
         NCP_SERVER_IP: ${{ secrets.NCP_SERVER_IP }}
-        NCP_DEPLOY_KEY: ${{ secrets.NCP_DEPLOY_KEY }} 
+        NCP_DEPLOY_KEY: ${{ secrets.NCP_DEPLOY_KEY }} # GitHub Deploy Key 사용
       run: |
-        # SSH 에이전트 시작 및 GitHub deploy key 추가 (개인 키 파일 경로 수정)
+        # SSH 에이전트 시작 및 GitHub deploy key 추가
         eval "$(ssh-agent -s)"
-        # GitHub Actions runner 환경에 저장된 실제 개인 키 파일 경로로 변경
-        # 예: ssh-add -k ~/.ssh/id_ed25519
-        ssh-add -k ~/.ssh/id_ed25519 
+        ssh-add -k ~/.ssh/id_rsa 
 
         # NCP 서버에 접속하여 배포 스크립트 실행 (개인 키 파일 경로 명시)
-        # GitHub Actions runner 환경에 저장된 실제 개인 키 파일 경로로 변경
-        # 예: ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
-        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
           # 저장소 복제 (최초 배포 또는 새로고침 시, 홈 디렉토리에 복제)
           git clone -b develop --single-branch git@github.com:OZ-Coding-School/oz_03_collabo-003-BE.git && \
           # 작업 디렉토리 설정 (저장소 이름으로 변경)
