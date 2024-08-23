@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. 작업 디렉토리 설정
-cd /path/to/your/project  # Django 프로젝트가 위치한 디렉토리로 변경
+cd oz_03_collabo-003-BE  # Django 프로젝트가 위치한 디렉토리로 변경
 
 # 2. 필요한 경우 Docker 이미지 pull (선택 사항)
 # docker-compose pull

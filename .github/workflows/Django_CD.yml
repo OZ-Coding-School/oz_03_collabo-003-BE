@@ -2,15 +2,11 @@ name: Django CD
 
 on:
   push:
-    branches: [ '*' ]  # 모든 브랜치에 푸시될 때 실행 테스트용
-  # pull_request:
-  #   branches: [ develop ]
-  #   types: [ closed ]
+    branches: [ '*' ]  # 모든 브랜치에 푸시될 때 실행 (테스트용)
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged == true #테스트를 위해 비활성화
 
     steps:
     - uses: actions/checkout@v3
@@ -43,12 +39,12 @@ jobs:
 
         # NCP 서버에 접속하여 배포 스크립트 실행
         ssh -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
-          # 작업 디렉토리 설정
-          cd /path/to/your/project && \
-          # 저장소 복제 (최초 배포 또는 새로고침 시)
-          git clone -b develop --single-branch git@github.com:OZ-Coding-School/oz_03_collabo-003-BE.git . && \
-          # .env 파일 생성 (heredoc 사용, NCP 서버에서 실행)
-          cat << EOF > .env
+          # 저장소 복제 (최초 배포 또는 새로고침 시, 홈 디렉토리에 복제)
+          git clone -b develop --single-branch git@github.com:OZ-Coding-School/oz_03_collabo-003-BE.git && \
+          # 작업 디렉토리 설정 (저장소 이름으로 변경)
+          cd oz_03_collabo-003-BE && \
+          # .env 파일 생성 (heredoc 사용, NCP 서버에서 실행, EOF 마커 위치 수정)
+          cat <<EOF > .env
           DB_ENGINE=$DB_ENGINE
           DB_NAME=$DB_NAME
           DB_USER=$DB_USER
