@@ -30,11 +30,11 @@ jobs:
         DB_HOST: ${{ secrets.DB_HOST }}
         DB_PORT: ${{ secrets.DB_PORT }}
         NCP_SERVER_IP: ${{ secrets.NCP_SERVER_IP }}
-        NCP_SSH_PRIVATE_KEY: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
+        NCP_DEPLOY_KEY: ${{ secrets.NCP_DEPLOY_KEY }} # GitHub Deploy Key 사용
       run: |
-        # SSH 키 등록
+        # SSH 키 등록 (GitHub Actions runner 환경에 저장된 deploy key 사용)
         mkdir -p ~/.ssh
-        echo "$NCP_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        echo "$NCP_DEPLOY_KEY" > ~/.ssh/id_rsa 
         chmod 600 ~/.ssh/id_rsa
 
         # NCP 서버에 접속하여 배포 스크립트 실행
