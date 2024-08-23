@@ -10,7 +10,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true #테스트를 위해 비활성화
 
     steps:
     - uses: actions/checkout@v3
