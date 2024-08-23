@@ -2,9 +2,10 @@ name: Django CI/CD
 
 on:
   push:
-    branches: [ '*' ]  # 모든 브랜치에 푸시될 때 CI 실행
+    branches: [ '*' ]  # 모든 브랜치에 푸시될 때 CI 작업의 일부 실행
   pull_request:
-    branches: [ '*' ]  # 모든 브랜치에 대한 pull request 생성 시 CI 실행
+    branches: [ develop ]  # develop 브랜치에 대한 pull request가 merge될 때 CD 실행
+    types: [ closed ]
 
 jobs:
   build:  # CI 작업
@@ -22,13 +23,6 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
 
     - name: Build and run tests
-      env: 
-        DB_ENGINE: ${{ secrets.DB_ENGINE }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_PORT: ${{ secrets.DB_PORT }}
       run: |
         # .env 파일 생성
         echo "DB_ENGINE=$DB_ENGINE" >> .env
@@ -38,28 +32,40 @@ jobs:
         echo "DB_HOST=$DB_HOST" >> .env
         echo "DB_PORT=$DB_PORT" >> .env
 
-        # docker-compose를 사용하여 빌드 및 테스트 실행
-        docker-compose build
-        docker-compose run --rm web python manage.py test
+        # docker-compose를 사용하여 빌드 및 서버 실행 (이미지에 태그 추가)
+        docker-compose up -d --build -t allthe:latest
+
+        # Django 서버가 뜰 때까지 대기 (wait-for-it.sh 사용)
+        ./wait-for-it.sh localhost:8000 -- echo "Django server is up!"
+
+        # Django 서버 응답 확인 (curl 사용)
+        curl -s http://localhost:8000 > /dev/null
+        if [ $? -eq 0 ]; then
+          echo "Django server responded successfully!"
+        else
+          echo "Django server failed to respond."
+          exit 1  # 에러 발생 시 workflow 실패 처리
+        fi
+
+        # 컨테이너 중지 및 삭제
+        docker-compose down
 
         # .env 파일 삭제
         rm .env
 
     - name: Build and push Docker image
-      if: github.event_name == 'push' && github.ref == 'refs/heads/develop'  # develop 브랜치에 푸시될 때만 이미지 빌드 및 푸시
+      if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true  # PR이 merge 되었을 때만 실행
       run: |
         # Docker Hub 로그인 정보 설정 (GitHub Actions Secrets에서 가져오기)
         echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-        # Docker 이미지 태그 및 푸시
-        docker tag allthe:latest ${{ secrets.DOCKER_USERNAME }}/allthe:latest
+        # Docker 이미지 푸시 (이미 태그가 붙어있으므로 tag 명령 불필요)
         docker push ${{ secrets.DOCKER_USERNAME }}/allthe:latest
 
   deploy:  # CD 작업
     runs-on: ubuntu-latest
     needs: build  # CI 작업 성공 후 실행
-    # develop 브랜치에 대한 pull request가 merge될 때만 실행
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' 
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true  # PR이 merge 되었을 때만 실행
 
     steps:
     - name: Deploy to NCP server
