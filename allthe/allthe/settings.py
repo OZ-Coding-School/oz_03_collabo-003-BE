@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "223.130.128.216"]
 
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = "accounts.User"
 # Application definition
 CUSTOM_APPS = [
     "rest_framework",
@@ -45,8 +45,8 @@ CUSTOM_APPS = [
     "admin_panel",
     "common",
     # 소셜로그인
-    'django.contrib.sites',
-    'rest_framework.authtoken',
+    "django.contrib.sites",
+    "rest_framework.authtoken",
 ]
 
 DEFAULT_APPS = [

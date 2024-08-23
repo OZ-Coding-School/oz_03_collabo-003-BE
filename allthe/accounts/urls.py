@@ -1,5 +1,18 @@
-from django.urls import path, re_path
+from django.urls import path
+from django.urls import re_path
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
 
+from .views import GoogleCallback
+from .views import GoogleLogin
+from .views import GoogleLogout
+from .views import KakaoCallback
+from .views import KakaoLogin
+from .views import KakaoLogout
+from .views import NaverCallback
+from .views import NaverLogin
+from .views import NaverLogout
 from .views import PasswordResetView
 from .views import RefreshTokenView
 from .views import UserAccountView
@@ -7,27 +20,18 @@ from .views import UserLoginView
 from .views import UserLogoutView
 from .views import UserProfileView
 from .views import UserRegistrationView
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-
-from .views import (
-    KakaoLogin, KakaoCallback, KakaoLogout,
-    GoogleLogin, GoogleCallback, GoogleLogout,
-    NaverLogin, NaverCallback, NaverLogout
-)
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Social Login API",
-      default_version='v1',
-      description="Documentation of Social Login APIs",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@myapi.local"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+    openapi.Info(
+        title="Social Login API",
+        default_version="v1",
+        description="Documentation of Social Login APIs",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="contact@myapi.local"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [
@@ -53,19 +57,19 @@ urlpatterns = [
     # 회원 탈퇴 API
     # 인증된 사용자가 자신의 계정을 삭제하고 JWT 토큰을 무효화합니다.
     path("account-delete/", UserAccountView.as_view(), name="account-delete"),
-
-    path('kakao/login/', KakaoLogin.as_view(), name='kakao-login'),
-    path('kakao/login/callback/', KakaoCallback.as_view(), name='kakao-callback'),
-    path('kakao/logout/', KakaoLogout.as_view(), name='kakao-logout'),
-
-    path('google/login/', GoogleLogin.as_view(), name='google-login'),
-    path('google/login/callback/', GoogleCallback.as_view(), name='google-callback'),
-    path('google/logout/', GoogleLogout.as_view(), name='google-logout'),
-
-    path('naver/login/', NaverLogin.as_view(), name='naver-login'),
-    path('naver/login/callback/', NaverCallback.as_view(), name='naver-callback'),
-    path('naver/logout/', NaverLogout.as_view(), name='naver-logout'),
-
+    path("kakao/login/", KakaoLogin.as_view(), name="kakao-login"),
+    path("kakao/login/callback/", KakaoCallback.as_view(), name="kakao-callback"),
+    path("kakao/logout/", KakaoLogout.as_view(), name="kakao-logout"),
+    path("google/login/", GoogleLogin.as_view(), name="google-login"),
+    path("google/login/callback/", GoogleCallback.as_view(), name="google-callback"),
+    path("google/logout/", GoogleLogout.as_view(), name="google-logout"),
+    path("naver/login/", NaverLogin.as_view(), name="naver-login"),
+    path("naver/login/callback/", NaverCallback.as_view(), name="naver-callback"),
+    path("naver/logout/", NaverLogout.as_view(), name="naver-logout"),
     # Swagger URL
-    re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    re_path(
+        r"^swagger/$",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
 ]
