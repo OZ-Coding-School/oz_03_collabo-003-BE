@@ -9,8 +9,6 @@ on:
 jobs:
   build:  # CI 작업
     runs-on: ubuntu-latest
-    # 푸시 이벤트 또는 pull request 이벤트 중 하나라도 발생하면 실행
-    if: github.event_name == 'push' || github.event_name == 'pull_request' 
 
     steps:
     - uses: actions/checkout@v3
