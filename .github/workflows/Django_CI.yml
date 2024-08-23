@@ -4,14 +4,14 @@ on:
   push:
     branches: [ '*' ]  # 모든 브랜치에 푸시될 때 실행
   pull_request:
-    branches: [ develop, main ]  # develop, main 브랜치에 대한 pull request 생성 시 실행
+    branches: [ '*' ]  # 모든 브랜치에 대한 pull request 생성 시 실행
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3  # 코드 체크아웃
+    - uses: actions/checkout@v3
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -22,7 +22,7 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
 
     - name: Build and run tests
-      env:  # GitHub Actions Secrets에서 환경 변수 가져오기
+      env: 
         DB_ENGINE: ${{ secrets.DB_ENGINE }}
         DB_NAME: ${{ secrets.DB_NAME }}
         DB_USER: ${{ secrets.DB_USER }}
@@ -38,14 +38,19 @@ jobs:
         echo "DB_HOST=$DB_HOST" >> .env
         echo "DB_PORT=$DB_PORT" >> .env
 
-        # docker-compose를 사용하여 빌드
+        # docker-compose를 사용하여 빌드 및 테스트 실행
         docker-compose build
-
-        # 마이그레이션 실행
-        docker-compose run --rm web python manage.py migrate
-
-        # 테스트 실행
         docker-compose run --rm web python manage.py test
 
         # .env 파일 삭제
         rm .env
+
+    - name: Build and push Docker image
+      if: github.ref == 'refs/heads/develop'  # develop 브랜치에 푸시될 때만 이미지 빌드 및 푸시
+      run: |
+        # Docker Hub 로그인 정보 설정 (GitHub Actions Secrets에서 가져오기)
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+        # Docker 이미지 태그 및 푸시
+        docker tag allthe:latest ${{ secrets.DOCKER_USERNAME }}/allthe:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/allthe:latest

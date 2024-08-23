@@ -1,26 +1,16 @@
 name: Django CD
 
 on:
-  push:
-    branches: [ '*' ]  # 모든 브랜치에 푸시될 때 실행 (테스트용)
+  pull_request:
+    branches: [ develop ]  # develop 브랜치에 대한 pull request가 merge될 때 실행
+    types: [ closed ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
 
     steps:
-    - uses: actions/checkout@v3
-      with:
-        ref: develop
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    - name: Install Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-
     - name: Deploy to NCP server
       env:
         DB_ENGINE: ${{ secrets.DB_ENGINE }}
@@ -30,29 +20,21 @@ jobs:
         DB_HOST: ${{ secrets.DB_HOST }}
         DB_PORT: ${{ secrets.DB_PORT }}
         NCP_SERVER_IP: ${{ secrets.NCP_SERVER_IP }}
-        NCP_DEPLOY_KEY: ${{ secrets.NCP_DEPLOY_KEY }} # GitHub Deploy Key 사용
+        NCP_SSH_PRIVATE_KEY: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
+        DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/allthe:latest  # Docker Hub 이미지 이름
       run: |
-        # SSH 에이전트 시작 및 GitHub deploy key 추가
-        eval "$(ssh-agent -s)"
-        ssh-add -k ~/.ssh/id_rsa 
+        # SSH 키 등록
+        mkdir -p ~/.ssh
+        echo "$NCP_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
 
-        # NCP 서버에 접속하여 배포 스크립트 실행 (개인 키 파일 경로 명시)
-        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
-          # 저장소 복제 (최초 배포 또는 새로고침 시, 홈 디렉토리에 복제)
-          git clone -b develop --single-branch git@github.com:OZ-Coding-School/oz_03_collabo-003-BE.git && \
-          # 작업 디렉토리 설정 (저장소 이름으로 변경)
-          cd oz_03_collabo-003-BE && \
-          # .env 파일 생성 (heredoc 사용, NCP 서버에서 실행, EOF 마커 위치 수정)
+        # NCP 서버에 접속하여 배포 스크립트 실행
+        ssh -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
+          # 작업 디렉토리 설정 (디렉토리 생성 포함)
+          mkdir -p /path/to/your/project && \
+          cd /path/to/your/project && \
+          # .env 파일 생성 (heredoc 사용, NCP 서버에서 실행)
           cat <<EOF > .env
           DB_ENGINE=$DB_ENGINE
           DB_NAME=$DB_NAME
-          DB_USER=$DB_USER
-          DB_PASSWORD=$DB_PASSWORD
-          DB_HOST=$DB_HOST
-          DB_PORT=$DB_PORT
-          EOF && \
-          # Docker 이미지 빌드
-          docker-compose build && \
-          # 배포 스크립트 실행
-          bash ./deploy.sh
-        "
+          DB_USER
