@@ -1,6 +1,9 @@
 name: Django CD
 
 on:
+  #For Test
+  push :
+    branches : ['*']
   pull_request:
     branches: [ develop ]
     types: [ closed ]
