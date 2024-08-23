@@ -19,10 +19,6 @@ jobs:
     - name: Build Docker image
       run: docker-compose build
 
-    - name: Push Docker image to registry (optional)
-      # 필요한 경우 Docker 이미지를 레지스트리에 푸시하는 단계 추가
-      # 예: docker-compose push
-
     - name: Deploy to NCP server
       env:
         DB_ENGINE: ${{ secrets.DB_ENGINE }}
