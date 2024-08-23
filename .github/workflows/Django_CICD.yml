@@ -46,8 +46,7 @@ jobs:
         rm .env
 
     - name: Build and push Docker image
-      # develop 브랜치에 푸시될 때만 이미지 빌드 및 푸시 (if 조건 추가)
-      if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/develop'  # develop 브랜치에 푸시될 때만 이미지 빌드 및 푸시
       run: |
         # Docker Hub 로그인 정보 설정 (GitHub Actions Secrets에서 가져오기)
         echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
@@ -83,8 +82,10 @@ jobs:
         # NCP 서버에 접속하여 배포 스크립트 실행
         ssh -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
           # 작업 디렉토리 설정 (디렉토리 생성 포함)
-          mkdir -p oz_03_collabo-003-BE && \
-          cd oz_03_collabo-003-BE && \
+          mkdir -p /home/ubuntu/oz_03_collabo-003-BE && \
+          cd /home/ubuntu/oz_03_collabo-003-BE && \
+          # 저장소 업데이트 (git pull)
+          git pull origin develop && \
           # .env 파일 생성 (heredoc 사용, NCP 서버에서 실행)
           cat <<EOF > .env
           DB_ENGINE=$DB_ENGINE
