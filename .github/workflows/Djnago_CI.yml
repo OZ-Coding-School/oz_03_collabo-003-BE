@@ -1,0 +1,52 @@
+jobs:
+  build:  # CI 작업
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Install Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+
+    - name: Build and run tests
+      env: 
+        DB_ENGINE: ${{ secrets.DB_ENGINE }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+      run: |
+        # .env 파일 생성
+        echo "DB_ENGINE=$DB_ENGINE" >> .env
+        echo "DB_NAME=$DB_NAME" >> .env
+        echo "DB_USER=$DB_USER" >> .env
+        echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+        echo "DB_HOST=$DB_HOST" >> .env
+        echo "DB_PORT=$DB_PORT" >> .env
+
+        # docker-compose를 사용하여 빌드 및 서버 실행 (이미지 이름은 docker-compose.yml에서 설정)
+        docker-compose up -d --build 
+
+        # Django 서버가 뜰 때까지 대기 (wait-for-it.sh 사용)
+        ./wait-for-it.sh localhost:8000 -- echo "Django server is up!" 
+
+        # Django 서버 응답 확인 (curl 사용)
+        curl -s http://localhost:8000 > /dev/null
+        if [ $? -eq 0 ]; then
+          echo "Django server responded successfully!"
+        else
+          echo "Django server failed to respond."
+          exit 1  # 에러 발생 시 workflow 실패 처리
+        fi
+
+        # 컨테이너 중지 및 삭제
+        docker-compose down
+
+        # .env 파일 삭제
+        rm .env
