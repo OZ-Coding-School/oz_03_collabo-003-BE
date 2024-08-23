@@ -46,7 +46,7 @@ jobs:
         chmod +x wait-for-it.sh
 
         # Django 서버가 뜰 때까지 대기 (wait-for-it.sh 사용)
-        ./wait-for-it.sh localhost:8000 -- echo "Django server is up!" 
+        ./wait-for-it.sh localhost:8000 --strict --timeout=30 -- echo "Django server is up!" 
 
         # Django 서버 응답 확인 (curl 사용)
         curl -s http://localhost:8000 > /dev/null
