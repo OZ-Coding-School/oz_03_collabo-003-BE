@@ -1,4 +1,4 @@
-name: Django CD
+name: Django CD (Test)
 
 on:
   push:
@@ -10,8 +10,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-      with:
-        ref: develop
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -23,37 +21,19 @@ jobs:
 
     - name: Deploy to NCP server
       env:
-        DB_ENGINE: ${{ secrets.DB_ENGINE }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_PORT: ${{ secrets.DB_PORT }}
         NCP_SERVER_IP: ${{ secrets.NCP_SERVER_IP }}
-        NCP_DEPLOY_KEY: ${{ secrets.NCP_DEPLOY_KEY }} # GitHub Deploy Key 사용
+        NCP_SSH_PRIVATE_KEY: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
       run: |
-        # SSH 키 등록 (GitHub Actions runner 환경에 저장된 deploy key 사용)
+        # SSH 키 등록
         mkdir -p ~/.ssh
-        echo "$NCP_DEPLOY_KEY" > ~/.ssh/id_rsa 
+        echo "$NCP_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
 
-        # NCP 서버에 접속하여 배포 스크립트 실행
+        # NCP 서버에 접속하여 저장소 복제
         ssh -o StrictHostKeyChecking=no root@$NCP_SERVER_IP "
-          # 저장소 복제 (최초 배포 또는 새로고침 시, 홈 디렉토리에 복제)
-          git clone -b develop --single-branch git@github.com:OZ-Coding-School/oz_03_collabo-003-BE.git && \
-          # 작업 디렉토리 설정 (저장소 이름으로 변경)
-          cd oz_03_collabo-003-BE && \
-          # .env 파일 생성 (heredoc 사용, NCP 서버에서 실행, EOF 마커 위치 수정)
-          cat <<EOF > .env
-          DB_ENGINE=$DB_ENGINE
-          DB_NAME=$DB_NAME
-          DB_USER=$DB_USER
-          DB_PASSWORD=$DB_PASSWORD
-          DB_HOST=$DB_HOST
-          DB_PORT=$DB_PORT
-          EOF && \
-          # Docker 이미지 빌드
-          docker-compose build && \
-          # 배포 스크립트 실행
-          bash ./deploy.sh
+          # 작업 디렉토리 설정 (디렉토리 생성 포함)
+          mkdir -p /path/to/your/project && \
+          cd /path/to/your/project && \
+          # 저장소 복제 (최초 배포 또는 새로고침 시, develop 브랜치 클론)
+          git clone -b develop --single-branch git@github.com:YOUR_USERNAME/YOUR_REPOSITORY.git .
         "
