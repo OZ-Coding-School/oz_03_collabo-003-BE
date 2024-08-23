@@ -3,9 +3,9 @@ name: Django CD
 on:
   push:
     branches: [ '*' ]  # 모든 브랜치에 푸시될 때 실행 테스트용
-  pull_request:
-    branches: [ develop ]
-    types: [ closed ]
+  # pull_request:
+  #   branches: [ develop ]
+  #   types: [ closed ]
 
 jobs:
   deploy:
