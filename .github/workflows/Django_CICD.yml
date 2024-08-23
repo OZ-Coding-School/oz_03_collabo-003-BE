@@ -51,7 +51,7 @@ jobs:
         # Docker Hub 로그인 정보 설정 (GitHub Actions Secrets에서 가져오기)
         echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-        # Docker 이미지 태그 및 푸시
+        # Docker 이미지 태그 및 푸시 (allthe로 변경)
         docker tag allthe:latest ${{ secrets.DOCKER_USERNAME }}/allthe:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/allthe:latest
 
