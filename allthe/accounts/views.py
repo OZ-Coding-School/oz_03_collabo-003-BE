@@ -13,13 +13,35 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import RefreshToken
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import PasswordResetConfirmSerializer
 from .serializers import PasswordResetRequestSerializer
 from .serializers import UserSerializer
 
+from django.shortcuts import redirect
+from django.http import HttpResponse
+import requests
+
+from dotenv import load_dotenv
+import os
 User = get_user_model()
 
+
+
+load_dotenv()
+
+KAKAO_APP_KEY = os.getenv('KAKAO_APP_KEY')
+KAKAO_SECRET=os.getenv('KAKAO_SECRET')
+GOOGLE_APP_KEY = os.getenv('GOOGLE_APP_KEY')
+GOOGLE_SECRET=os.getenv('GOOGLE_SECRET')
+NAVER_APP_KEY = os.getenv('NAVER_APP_KEY')
+NAVER_SECRET=os.getenv('NAVER_SECRET')
+PORTONE_APP_KEY = os.getenv('PORTONE_APP_KEY')
+PORTONE_SECRET=os.getenv('PORTONE_SECRET')
+PORTONE_CHANNEL_KEY = os.getenv('PORTONE_CHANNEL_KEY')
 
 class UserRegistrationView(APIView):
     def post(self, request):
@@ -394,3 +416,387 @@ class UserAccountView(APIView):
             return Response(
                 {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
             )
+
+class KakaoLogin(APIView):
+    @swagger_auto_schema(
+        operation_description="Redirects to Kakao for user authentication",
+        responses={302: 'Redirects to Kakao authorization page'}
+    )
+    def get(self, request):
+        redirect_uri = 'http://127.0.0.1:8000/accounts/kakao/login/callback/'
+        kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_APP_KEY}&redirect_uri={redirect_uri}&response_type=code"
+        return redirect(kakao_auth_url)
+
+class KakaoCallback(APIView):
+    @swagger_auto_schema(
+        operation_description="Handles Kakao callback, exchanges code for access token, and logs in the user",
+        responses={
+            200: openapi.Response('Login successful', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING),
+                    'access_token': openapi.Schema(type=openapi.TYPE_STRING),
+                    'user_info': openapi.Schema(type=openapi.TYPE_OBJECT)
+                }
+            )),
+            400: openapi.Response('Bad request', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING),
+                    'details': openapi.Schema(type=openapi.TYPE_OBJECT)
+                }
+            ))
+        }
+    )
+    def get(self, request):
+        code = request.GET.get('code')
+        if not code:
+            return Response({'error': 'No authorization code provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_url = "https://kauth.kakao.com/oauth/token"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'}
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': KAKAO_APP_KEY,
+            'client_secret': KAKAO_SECRET,
+            'redirect_uri': 'http://127.0.0.1:8000/accounts/kakao/login/callback/',
+            'code': code
+        }
+
+        response = requests.post(token_url, headers=headers, data=data)
+        response_data = response.json()
+
+        if response.status_code != 200:
+            return Response({'error': 'Failed to obtain access token', 'details': response_data}, status=status.HTTP_400_BAD_REQUEST)
+
+        access_token = response_data.get('access_token')
+        if not access_token:
+            return Response({'error': 'No access token received'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_info_url = "https://kapi.kakao.com/v2/user/me"
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info_response = requests.get(user_info_url, headers=headers)
+        user_info = user_info_response.json()
+
+        email = user_info['kakao_account']['email']
+        username = user_info['kakao_account']['profile']['nickname']
+        provider = 'kakao'
+
+        user, created = User.objects.update_or_create(
+            email=email,
+            defaults={
+                'username': username,
+                'social_provider': provider,
+                'is_active': True,
+            }
+        )
+
+        refresh = RefreshToken.for_user(user)
+        jwt_access_token = str(refresh.access_token)
+
+        response = Response(
+            {'message': 'Login successful', 'access_token': jwt_access_token, 'user_info': user_info},
+            status=status.HTTP_200_OK
+        )
+        response.set_cookie(
+            'jwt_access_token',
+            jwt_access_token,
+            max_age=3600,
+            httponly=True,
+            secure=False,
+            samesite='Lax'
+        )
+        response.set_cookie('kakao_access_token', access_token, max_age=3600, httponly=True, secure=False, samesite='Lax')
+        return response
+
+class KakaoLogout(APIView):
+    @swagger_auto_schema(
+        operation_description="Logs out the user from Kakao and deletes cookies",
+        responses={
+            200: openapi.Response('Logout successful'),
+            400: openapi.Response('Bad request', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING)
+                }
+            ))
+        }
+    )
+    def get(self, request):
+        access_token = request.COOKIES.get('kakao_access_token')
+        if not access_token:
+            return HttpResponse({'error': 'No access token found'}, status=400)
+
+        logout_url = "https://kapi.kakao.com/v1/user/logout"
+        headers = {'Authorization': f'Bearer {access_token}'}
+        requests.post(logout_url, headers=headers)
+
+        revoke_token_url = "https://kapi.kakao.com/v1/user/unlink"
+        headers = {'Authorization': f'Bearer {access_token}'}
+        requests.post(revoke_token_url, headers=headers)
+
+        response = HttpResponse({'message': 'Logged out successfully'})
+        response.delete_cookie('kakao_access_token')
+        response.delete_cookie('jwt_access_token')
+        return response
+
+class GoogleLogin(APIView):
+    @swagger_auto_schema(
+        operation_description="Redirects to Google for user authentication",
+        responses={302: 'Redirects to Google authorization page'}
+    )
+    def get(self, request):
+        redirect_uri = 'http://127.0.0.1:8000/accounts/google/login/callback/'
+        google_auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={GOOGLE_APP_KEY}&redirect_uri={redirect_uri}&response_type=code&scope=email%20profile"
+        return redirect(google_auth_url)
+
+class GoogleCallback(APIView):
+    @swagger_auto_schema(
+        operation_description="Handles Google callback, exchanges code for access token, and logs in the user",
+        responses={
+            200: openapi.Response('Login successful', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING),
+                    'access_token': openapi.Schema(type=openapi.TYPE_STRING),
+                    'user_info': openapi.Schema(type=openapi.TYPE_OBJECT)
+                }
+            )),
+            400: openapi.Response('Bad request', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING),
+                    'details': openapi.Schema(type=openapi.TYPE_OBJECT)
+                }
+            ))
+        }
+    )
+    def get(self, request):
+        code = request.GET.get('code')
+        if not code:
+            return Response({'error': 'No authorization code provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_url = "https://oauth2.googleapis.com/token"
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': GOOGLE_APP_KEY,
+            'client_secret': GOOGLE_SECRET,
+            'redirect_uri': 'http://127.0.0.1:8000/accounts/google/login/callback/',
+            'code': code
+        }
+
+        response = requests.post(token_url, data=data)
+        response_data = response.json()
+
+        if response.status_code != 200:
+            return Response({'error': 'Failed to obtain access token', 'details': response_data}, status=status.HTTP_400_BAD_REQUEST)
+
+        access_token = response_data.get('access_token')
+        if not access_token:
+            return Response({'error': 'No access token received'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info_response = requests.get(user_info_url, headers=headers)
+        user_info = user_info_response.json()
+
+        email = user_info['email']
+        username = user_info['name']
+        provider = 'google'
+
+        user, created = User.objects.update_or_create(
+            email=email,
+            defaults={
+                'username': username,
+                'social_provider': provider,
+                'is_active': True,
+            }
+        )
+
+        refresh = RefreshToken.for_user(user)
+        jwt_access_token = str(refresh.access_token)
+
+        response = Response(
+            {'message': 'Login successful', 'access_token': jwt_access_token, 'user_info': user_info},
+            status=status.HTTP_200_OK
+        )
+        response.set_cookie(
+            'jwt_access_token',
+            jwt_access_token,
+            max_age=3600,
+            httponly=True,
+            secure=False,
+            samesite='Lax'
+        )
+        response.set_cookie(
+            'google_access_token',
+            access_token,
+            max_age=3600,
+            httponly=True,
+            secure=False,
+            samesite='Lax'
+        )
+
+        return response
+
+class GoogleLogout(APIView):
+    @swagger_auto_schema(
+        operation_description="Logs out the user from Google and deletes cookies",
+        responses={
+            200: openapi.Response('Logout successful'),
+            400: openapi.Response('Bad request', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING)
+                }
+            ))
+        }
+    )
+    def get(self, request):
+        access_token = request.COOKIES.get('google_access_token')
+        if not access_token:
+            return Response({'error': 'No access token found'}, status=400)
+
+        revoke_token_url = "https://oauth2.googleapis.com/revoke"
+        params = {'token': access_token}
+        requests.post(revoke_token_url, params=params)
+
+        response = Response({'message': 'Logged out successfully'})
+        response.delete_cookie('google_access_token')
+        response.delete_cookie('jwt_access_token')
+        return response
+
+class NaverLogin(APIView):
+    @swagger_auto_schema(
+        operation_description="Redirects to Naver for user authentication",
+        responses={302: 'Redirects to Naver authorization page'}
+    )
+    def get(self, request):
+        redirect_uri = 'http://127.0.0.1:8000/accounts/naver/login/callback/'
+        state = "random_state"
+        naver_auth_url = f"https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id={NAVER_APP_KEY}&redirect_uri={redirect_uri}&state={state}"
+        return redirect(naver_auth_url)
+
+class NaverCallback(APIView):
+    @swagger_auto_schema(
+        operation_description="Handles Naver callback, exchanges code for access token, and logs in the user",
+        responses={
+            200: openapi.Response('Login successful', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING),
+                    'access_token': openapi.Schema(type=openapi.TYPE_STRING),
+                    'user_info': openapi.Schema(type=openapi.TYPE_OBJECT)
+                }
+            )),
+            400: openapi.Response('Bad request', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING),
+                    'details': openapi.Schema(type=openapi.TYPE_OBJECT)
+                }
+            ))
+        }
+    )
+    def get(self, request):
+        code = request.GET.get('code')
+        state = request.GET.get('state')
+        if not code:
+            return Response({'error': 'No authorization code provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_url = "https://nid.naver.com/oauth2.0/token"
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': NAVER_APP_KEY,
+            'client_secret': NAVER_SECRET,
+            'redirect_uri': 'http://127.0.0.1:8000/accounts/naver/login/callback/',
+            'code': code,
+            'state': state
+        }
+
+        response = requests.post(token_url, data=data)
+        response_data = response.json()
+
+        if response.status_code != 200:
+            return Response({'error': 'Failed to obtain access token', 'details': response_data}, status=status.HTTP_400_BAD_REQUEST)
+
+        access_token = response_data.get('access_token')
+        if not access_token:
+            return Response({'error': 'No access token received'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_info_url = "https://openapi.naver.com/v1/nid/me"
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info_response = requests.get(user_info_url, headers=headers)
+        user_info = user_info_response.json()
+
+        email = user_info['response']['email']
+        username = user_info['response']['name']
+        provider = 'naver'
+
+        user, created = User.objects.update_or_create(
+            email=email,
+            defaults={
+                'username': username,
+                'social_provider': provider,
+                'is_active': True,
+            }
+        )
+
+        refresh = RefreshToken.for_user(user)
+        jwt_access_token = str(refresh.access_token)
+
+        response = Response(
+            {'message': 'Login successful', 'access_token': jwt_access_token, 'user_info': user_info},
+            status=status.HTTP_200_OK
+        )
+        response.set_cookie(
+            'jwt_access_token',
+            jwt_access_token,
+            max_age=3600,
+            httponly=True,
+            secure=False,
+            samesite='Lax'
+        )
+        response.set_cookie(
+            'naver_access_token',
+            access_token,
+            max_age=3600,
+            httponly=True,
+            secure=False,
+            samesite='Lax'
+        )
+
+        return response
+
+class NaverLogout(APIView):
+    @swagger_auto_schema(
+        operation_description="Logs out the user from Naver and deletes cookies",
+        responses={
+            200: openapi.Response('Logout successful'),
+            400: openapi.Response('Bad request', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'error': openapi.Schema(type=openapi.TYPE_STRING)
+                }
+            ))
+        }
+    )
+    def get(self, request):
+        access_token = request.COOKIES.get('naver_access_token')
+        if not access_token:
+            return Response({'error': 'No access token found'}, status=400)
+
+        logout_url = "https://nid.naver.com/oauth2.0/token"
+        params = {
+            'grant_type': 'delete',
+            'client_id': NAVER_APP_KEY,
+            'client_secret': NAVER_SECRET,
+            'access_token': access_token,
+            'service_provider': 'NAVER'
+        }
+        requests.post(logout_url, params=params)
+
+        response = Response({'message': 'Logged out successfully'})
+        response.delete_cookie('naver_access_token')
+        response.delete_cookie('jwt_access_token')
+        return response
