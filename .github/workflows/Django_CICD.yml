@@ -41,6 +41,9 @@ jobs:
 
         # docker-compose를 사용하여 빌드 및 서버 실행 (이미지 이름은 docker-compose.yml에서 설정)
         docker-compose up -d --build 
+        
+        # wait-for-it.sh 스크립트에 실행 권한 부여
+        chmod +x wait-for-it.sh
 
         # Django 서버가 뜰 때까지 대기 (wait-for-it.sh 사용)
         ./wait-for-it.sh localhost:8000 -- echo "Django server is up!" 
