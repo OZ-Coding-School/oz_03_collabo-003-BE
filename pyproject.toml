@@ -19,6 +19,7 @@ isort = "^5.13.2"
 drf-yasg = "^1.21.7"
 requests = "^2.32.3"
 setuptools = "^73.0.1"
+pillow = "^10.4.0"
 
 
 [build-system]

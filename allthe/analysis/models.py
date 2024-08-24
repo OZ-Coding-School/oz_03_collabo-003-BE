@@ -7,9 +7,8 @@ class AnalysisRequest(models.Model):
     client = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="analysis_requests_as_client"
     )
-    analyst = models.ForeignKey(
+    analyst = models.ManyToManyField(
         User,
-        on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="analysis_requests_as_analyst",
@@ -24,7 +23,7 @@ class AnalysisRequest(models.Model):
         ],
         default="PENDING",
     )
-    scheduled_at = models.DateTimeField(null=True, blank=True)
+    requirements = models.TextField(null=True, blank=True)  # 요구 사항
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

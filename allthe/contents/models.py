@@ -15,13 +15,17 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+class ContentImage(models.Model):
+    file = models.ImageField(upload_to='images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
 class Content(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     content = models.TextField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    thumbnail = models.CharField(max_length=255, blank=True, null=True)
+    category = models.TextField()
+    thumbnail = models.ImageField(upload_to='images/')
+    images = models.ManyToManyField(ContentImage, blank=True)
     site_url = models.CharField(max_length=255)
     site_description = models.TextField(blank=True, null=True)
     is_analyzed = models.BooleanField(default=False)

@@ -503,6 +503,7 @@ class KakaoCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
+                #"role":"client"
             },
         )
 
@@ -514,6 +515,7 @@ class KakaoCallback(APIView):
                 "message": "Login successful",
                 "access_token": jwt_access_token,
                 "user_info": user_info,
+                
             },
             status=status.HTTP_200_OK,
         )
@@ -655,6 +657,7 @@ class GoogleCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
+                #"role":"analyst"
             },
         )
 
