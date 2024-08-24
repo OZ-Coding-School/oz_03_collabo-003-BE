@@ -40,7 +40,7 @@ urlpatterns = [
     # 계정
     path("accounts/", include("accounts.urls")),
     path("contents/", include("contents.urls")),
-    #path("request/", include("analysis.urls")),
+    # path("request/", include("analysis.urls")),
     # Swagger UI
     path(
         "swagger/",
