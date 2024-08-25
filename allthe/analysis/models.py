@@ -13,7 +13,7 @@ class AnalysisRequest(models.Model):
         blank=True,
         related_name="analysis_requests_as_analyst",
     )
-    content = models.ForeignKey(Content, on_delete=models.CASCADE)
+    content_id = models.ForeignKey(Content, on_delete=models.CASCADE)
     status = models.CharField(
         max_length=20,
         choices=[
