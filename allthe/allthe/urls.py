@@ -39,6 +39,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # 계정
     path("accounts/", include("accounts.urls")),
+    path("contents/", include("contents.urls")),
+    # path("request/", include("analysis.urls")),
     # Swagger UI
     path(
         "swagger/",
