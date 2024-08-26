@@ -898,7 +898,7 @@ class NaverLogout(APIView):
         return response
 
 
-@csrf_exempt  # CSRF 검사를 제외합니다. (API 호출 시 CSRF 검사를 무시)
+@csrf_exempt
 class CheckBusinessStatusView(View):
     def post(self, request):
         try:
@@ -907,7 +907,7 @@ class CheckBusinessStatusView(View):
             business_number = data.get("b_no")
 
             if not business_number:
-                return JsonResponse({"error": "사업자번호가 필요합니다."}, status=400)
+                return JsonResponse({"message": "사업자번호가 필요합니다."}, status=400)
 
             # 외부 API 요청을 위한 URL 및 서비스 키
             api_url = "https://api.odcloud.kr/api/nts-businessman/v1/status"
@@ -924,10 +924,20 @@ class CheckBusinessStatusView(View):
             )
             response.raise_for_status()  # 요청 실패 시 예외 발생
 
-            # API 응답 반환
-            return JsonResponse(response.json())
+            # API 응답 데이터 가져오기
+            api_response_data = response.json()
+
+            # 성공적인 조회 응답 반환
+            return JsonResponse(
+                {
+                    "message": "조회가 성공적으로 완료되었습니다.",
+                    "data": api_response_data,
+                }
+            )
 
         except requests.RequestException as e:
-            return JsonResponse({"error": str(e)}, status=400)
+            return JsonResponse(
+                {"message": "외부 API 요청 중 오류 발생", "error": str(e)}, status=400
+            )
         except json.JSONDecodeError:
-            return JsonResponse({"error": "잘못된 요청 데이터입니다."}, status=400)
+            return JsonResponse({"message": "잘못된 요청 데이터입니다."}, status=400)

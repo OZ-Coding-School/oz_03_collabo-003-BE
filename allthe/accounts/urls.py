@@ -66,7 +66,7 @@ urlpatterns = [
     # 사업자번호 상태 확인 API
     path(
         "check-business-status/",
-        CheckBusinessStatusView.as_view(),
+        CheckBusinessStatusView,
         name="check-business-status",
     ),
     # Swagger URL
