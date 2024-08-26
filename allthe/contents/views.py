@@ -1,15 +1,20 @@
+from accounts.models import User
+from django.db import models
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-from django.db import models
-from accounts.models import User
-from .models import Content, Review, Like
+
+from .models import Content
 from .models import Image
-from .serializers import ContentsSerializer, ReviewSerializer, LikeSerializer
+from .models import Like
+from .models import Review
+from .serializers import ContentsSerializer
+from .serializers import LikeSerializer
+from .serializers import ReviewSerializer
 
 
 # 콘텐츠 업로드(post), 모든 콘텐츠 list(get)
@@ -86,22 +91,36 @@ class UploadContent(APIView):
         contents = Content.objects.all()
         serializer = ContentsSerializer(contents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 
 # 콘텐츠 수정(PATCH) API
 class UpdateContent(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
-#APIView를 상속받아 UpdateContent 클래스를 정의
+
+    # APIView를 상속받아 UpdateContent 클래스를 정의
     @swagger_auto_schema(
-        request_body=openapi.Schema( #request_body를 사용하여 요청 데이터의 형식
+        request_body=openapi.Schema(  # request_body를 사용하여 요청 데이터의 형식
             type=openapi.TYPE_OBJECT,
             properties={
-                "title": openapi.Schema(type=openapi.TYPE_STRING, description="Title of the content"),
-                "content": openapi.Schema(type=openapi.TYPE_STRING, description="Content body"),
-                "category": openapi.Schema(type=openapi.TYPE_STRING, description="Category of the content"),
-                "site_url": openapi.Schema(type=openapi.TYPE_STRING, description="Site URL related to the content"),
-                "site_description": openapi.Schema(type=openapi.TYPE_STRING, description="Description of the site"),
-                "is_analyzed": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Is the content analyzed"),
+                "title": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Title of the content"
+                ),
+                "content": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Content body"
+                ),
+                "category": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Category of the content"
+                ),
+                "site_url": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Site URL related to the content",
+                ),
+                "site_description": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Description of the site"
+                ),
+                "is_analyzed": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN, description="Is the content analyzed"
+                ),
                 "images": openapi.Schema(
                     type=openapi.TYPE_ARRAY,
                     items=openapi.Schema(type=openapi.TYPE_FILE),
@@ -110,7 +129,7 @@ class UpdateContent(APIView):
                 ),
             },
         ),
-        responses={ #responses를 사용하여 다양한 응답 상태 코드에 대한 설명을 추가
+        responses={  # responses를 사용하여 다양한 응답 상태 코드에 대한 설명을 추가
             status.HTTP_200_OK: ContentsSerializer,
             status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
             status.HTTP_404_NOT_FOUND: openapi.Response("Content Not Found"),
@@ -119,18 +138,21 @@ class UpdateContent(APIView):
         operation_summary="Update existing content",
         operation_description="This endpoint allows users to update an existing content object. Only non-analyst users can update content.",
     )
-    def patch(self, request, pk): #pk를 URL 경로에서 받아 콘텐츠를 검색
+    def patch(self, request, pk):  # pk를 URL 경로에서 받아 콘텐츠를 검색
         # 콘텐츠 객체 가져오기
         try:
             content = Content.objects.get(pk=pk)
         except Content.DoesNotExist:
-            #콘텐츠가 존재하지 않으면 404 Not Found 응답을 반환
-            return Response({"error": "콘텐츠를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            # 콘텐츠가 존재하지 않으면 404 Not Found 응답을 반환
+            return Response(
+                {"error": "콘텐츠를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         # 요청한 사용자가 의뢰자인지 확인
         if request.user.role == "analyst":
             return Response(
-                #요청 사용자의 역할을 확인하여 권한이 없으면 403 Forbidden 응답을 반환
+                # 요청 사용자의 역할을 확인하여 권한이 없으면 403 Forbidden 응답을 반환
                 {"error": "분석가는 콘텐츠를 수정할 수 없습니다."},
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -145,7 +167,7 @@ class UpdateContent(APIView):
             updated_content = content_serializer.save()
 
             # 이미지 처리
-            if 'images' in request.FILES:
+            if "images" in request.FILES:
                 image_files = request.FILES.getlist("images")
                 for image_file in image_files:
                     # Image 모델에 이미지 저장
@@ -156,11 +178,11 @@ class UpdateContent(APIView):
             return Response(content_serializer.data, status=status.HTTP_200_OK)
 
         return Response(content_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 # 콘텐츠 삭제(DELETE) API
 class DeleteContent(APIView):
-    #APIView를 상속받아 DeleteContent 클래스를 정의
+    # APIView를 상속받아 DeleteContent 클래스를 정의
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -177,7 +199,10 @@ class DeleteContent(APIView):
         try:
             content = Content.objects.get(pk=pk)
         except Content.DoesNotExist:
-            return Response({"error": "콘텐츠를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "콘텐츠를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         # 요청한 사용자가 의뢰자인지 확인
         if request.user.role == "analyst":
@@ -188,9 +213,9 @@ class DeleteContent(APIView):
 
         # 콘텐츠 객체 삭제
         content.delete()
-        #콘텐츠 객체를 삭제하고 204 No Content 응답을 반환
+        # 콘텐츠 객체를 삭제하고 204 No Content 응답을 반환
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 
 class AddReview(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
@@ -210,7 +235,10 @@ class AddReview(APIView):
         try:
             content = Content.objects.get(pk=content_id)
         except Content.DoesNotExist:
-            return Response({"error": "콘텐츠를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "콘텐츠를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         data = request.data.copy()
         data["user"] = request.user.id
@@ -222,7 +250,7 @@ class AddReview(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class UpdateReview(APIView):
     permission_classes = [IsAuthenticated]
@@ -242,11 +270,16 @@ class UpdateReview(APIView):
         try:
             review = Review.objects.get(pk=review_id)
         except Review.DoesNotExist:
-            return Response({"error": "리뷰를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-        
+            return Response(
+                {"error": "리뷰를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND
+            )
+
         # 본인 리뷰 또는 관리자인 경우만 수정 가능
         if request.user != review.user and not request.user.is_staff:
-            return Response({"error": "본인 리뷰만 수정할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "본인 리뷰만 수정할 수 있습니다."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         data = request.data
         serializer = ReviewSerializer(review, data=data, partial=True)
@@ -255,7 +288,7 @@ class UpdateReview(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class DeleteReview(APIView):
     permission_classes = [IsAuthenticated]
@@ -273,27 +306,36 @@ class DeleteReview(APIView):
         try:
             review = Review.objects.get(pk=review_id)
         except Review.DoesNotExist:
-            return Response({"error": "리뷰를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "리뷰를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # 본인 리뷰 또는 관리자인 경우만 삭제 가능
         if request.user != review.user and not request.user.is_staff:
-            return Response({"error": "본인 리뷰만 삭제할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "본인 리뷰만 삭제할 수 있습니다."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         review.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-#콘텐츠 찜하기 api
+
+# 콘텐츠 찜하기 api
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.ForeignKey(Content, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'content')  # 같은 사용자가 동일 콘텐츠를 중복 찜할 수 없도록 설정
+        unique_together = (
+            "user",
+            "content",
+        )  # 같은 사용자가 동일 콘텐츠를 중복 찜할 수 없도록 설정
 
     def __str__(self):
-        return f'{self.user} - {self.content}'
-    
+        return f"{self.user} - {self.content}"
+
 
 class ToggleLike(APIView):
     permission_classes = [IsAuthenticated]
@@ -302,25 +344,32 @@ class ToggleLike(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'content_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the content to be liked/unliked')
-            }
+                "content_id": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="ID of the content to be liked/unliked",
+                )
+            },
         ),
         responses={
             status.HTTP_200_OK: LikeSerializer,
-            status.HTTP_400_BAD_REQUEST: openapi.Response('Bad Request'),
+            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
         },
-        operation_summary='Add or remove content from likes',
-        operation_description='Add or remove a specific content from the likes. If the content is already liked, it will be unliked. Otherwise, it will be liked.',
+        operation_summary="Add or remove content from likes",
+        operation_description="Add or remove a specific content from the likes. If the content is already liked, it will be unliked. Otherwise, it will be liked.",
     )
     def post(self, request):
-        content_id = request.data.get('content_id')
+        content_id = request.data.get("content_id")
         if not content_id:
-            return Response({"error": "Content ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Content ID is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             content = Content.objects.get(pk=content_id)
         except Content.DoesNotExist:
-            return Response({"error": "Content not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Content not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Check if the content is already liked by the user
         like, created = Like.objects.get_or_create(user=request.user, content=content)
@@ -328,10 +377,15 @@ class ToggleLike(APIView):
         if not created:
             # Item already liked, remove it
             like.delete()
-            return Response({"message": "Content removed from likes."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Content removed from likes."}, status=status.HTTP_200_OK
+            )
 
         # New item liked
-        return Response({"message": "Content added to likes."}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Content added to likes."}, status=status.HTTP_200_OK
+        )
+
 
 class LikedContentList(APIView):
     permission_classes = [IsAuthenticated]
@@ -339,10 +393,10 @@ class LikedContentList(APIView):
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: LikeSerializer(many=True),
-            status.HTTP_400_BAD_REQUEST: openapi.Response('Bad Request'),
+            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
         },
-        operation_summary='List all liked content',
-        operation_description='Retrieve a list of all content items liked by the user.',
+        operation_summary="List all liked content",
+        operation_description="Retrieve a list of all content items liked by the user.",
     )
     def get(self, request):
         liked_items = Like.objects.filter(user=request.user)
