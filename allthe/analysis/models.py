@@ -9,7 +9,7 @@ class AnalysisRequest(models.Model):
     )
     analyst = models.ManyToManyField(
         User,
-        null=True,
+        # null=True,
         blank=True,
         related_name="analysis_requests_as_analyst",
     )

@@ -24,6 +24,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import PasswordResetConfirmSerializer
 from .serializers import PasswordResetRequestSerializer
 from .serializers import UserSerializer
+from .serializers import UsernameCheckSerializer
 
 User = get_user_model()
 
@@ -142,6 +143,19 @@ class UserRegistrationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+class UsernameCheckView(APIView):
+    """
+    사용자 이름 중복 확인 API
+    - 제공된 사용자 이름이 이미 사용 중인지 확인합니다.
+    """
+    def post(self, request):
+        serializer = UsernameCheckSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data['username']
+            exists = User.objects.filter(username=username).exists()
+            return Response({'exists': exists}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class UserLoginView(APIView):
     def post(self, request):
