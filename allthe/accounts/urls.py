@@ -1,16 +1,27 @@
-from django.urls import path, re_path
+from django.urls import path
+from django.urls import re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from .views import (
-    GoogleCallback, GoogleLogin, GoogleLogout,
-    KakaoCallback, KakaoLogin, KakaoLogout,
-    NaverCallback, NaverLogin, NaverLogout,
-    PasswordResetView, RefreshTokenView,
-    UserAccountView, UserLoginView, UserLogoutView,
-    UserProfileView, UserRegistrationView, UsernameCheckView
-)
+from .views import CheckBusinessStatusView
+from .views import GoogleCallback
+from .views import GoogleLogin
+from .views import GoogleLogout
+from .views import KakaoCallback
+from .views import KakaoLogin
+from .views import KakaoLogout
+from .views import NaverCallback
+from .views import NaverLogin
+from .views import NaverLogout
+from .views import PasswordResetView
+from .views import RefreshTokenView
+from .views import UserAccountView
+from .views import UserLoginView
+from .views import UserLogoutView
+from .views import UsernameCheckView
+from .views import UserProfileView
+from .views import UserRegistrationView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -52,6 +63,12 @@ urlpatterns = [
     path("naver/login/", NaverLogin.as_view(), name="naver-login"),
     path("naver/login/callback/", NaverCallback.as_view(), name="naver-callback"),
     path("naver/logout/", NaverLogout.as_view(), name="naver-logout"),
+    # 사업자번호 상태 확인 API
+    path(
+        "check-business-status/",
+        CheckBusinessStatusView.as_view(),
+        name="check-business-status",
+    ),
     # Swagger URL
     re_path(
         r"^swagger/$",

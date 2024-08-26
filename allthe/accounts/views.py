@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 
 import jwt
@@ -7,9 +8,12 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -23,8 +27,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import PasswordResetConfirmSerializer
 from .serializers import PasswordResetRequestSerializer
-from .serializers import UserSerializer
 from .serializers import UsernameCheckSerializer
+from .serializers import UserSerializer
 
 User = get_user_model()
 
@@ -143,19 +147,21 @@ class UserRegistrationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
 class UsernameCheckView(APIView):
     """
     사용자 이름 중복 확인 API
     - 제공된 사용자 이름이 이미 사용 중인지 확인합니다.
     """
+
     def post(self, request):
         serializer = UsernameCheckSerializer(data=request.data)
         if serializer.is_valid():
-            username = serializer.validated_data['username']
+            username = serializer.validated_data["username"]
             exists = User.objects.filter(username=username).exists()
-            return Response({'exists': exists}, status=status.HTTP_200_OK)
+            return Response({"exists": exists}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class UserLoginView(APIView):
     def post(self, request):
@@ -890,3 +896,38 @@ class NaverLogout(APIView):
         response.delete_cookie("naver_access_token")
         response.delete_cookie("jwt_access_token")
         return response
+
+
+@csrf_exempt  # CSRF 검사를 제외합니다. (API 호출 시 CSRF 검사를 무시)
+class CheckBusinessStatusView(View):
+    def post(self, request):
+        try:
+            # 요청 본문에서 JSON 데이터 파싱
+            data = json.loads(request.body)
+            business_number = data.get("b_no")
+
+            if not business_number:
+                return JsonResponse({"error": "사업자번호가 필요합니다."}, status=400)
+
+            # 외부 API 요청을 위한 URL 및 서비스 키
+            api_url = "https://api.odcloud.kr/api/nts-businessman/v1/status"
+            service_key = "81v1ccEVwCErTew95hfnA%2Br95pix3CQCzdfoXag6gg34TJeXJIawjx%2FGgYYeYrL6dTMt0DFvYKvIpAr8h3p35Q%3D%3D"
+
+            # API 요청에 필요한 헤더와 파라미터 설정
+            headers = {"Content-Type": "application/json", "Accept": "application/json"}
+            params = {"serviceKey": service_key}
+            payload = {"b_no": business_number}
+
+            # 외부 API에 POST 요청 보내기
+            response = requests.post(
+                api_url, headers=headers, params=params, json=payload
+            )
+            response.raise_for_status()  # 요청 실패 시 예외 발생
+
+            # API 응답 반환
+            return JsonResponse(response.json())
+
+        except requests.RequestException as e:
+            return JsonResponse({"error": str(e)}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "잘못된 요청 데이터입니다."}, status=400)
