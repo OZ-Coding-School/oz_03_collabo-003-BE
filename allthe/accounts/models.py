@@ -1,7 +1,7 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.db import models
@@ -13,12 +13,9 @@ from .managers import CustomUserManager
 class User(AbstractUser):
     """
     사용자 모델
-    - 기본 Django `AbstractUser` 모델을 확장하여 이메일을 로그인 필드로 사용하며,
-    인증 제공자와 생성 일자를 추가합니다.
     """
 
-    email = models.EmailField(unique=True)  # 이메일 필드, 이메일이 유일해야 함
-    # provider 필드는 social_provider 필드로 변경
+    email = models.EmailField(unique=True)
     social_provider = models.CharField(
         max_length=100,
         choices=[
@@ -28,15 +25,15 @@ class User(AbstractUser):
         ],
         blank=True,
         null=True,
-    )  # 인증 제공자 (예: Google, Facebook)
+    )
     username = models.CharField(
         max_length=150, blank=True, null=True, unique=True
-    )  # 사용자 이름, 공백 및 null 허용
-    created_at = models.DateTimeField(
-        default=timezone.now
-    )  # 생성 일자, 기본값은 현재 시간
+    )
+    nickname = models.CharField(
+        max_length=150, unique=True
+    )  # 새로운 닉네임 필드 추가
+    created_at = models.DateTimeField(default=timezone.now)
 
-    # 추가된 필드
     role = models.CharField(
         max_length=255,
         choices=[
@@ -52,40 +49,46 @@ class User(AbstractUser):
     refresh_token = models.CharField(max_length=255, blank=True, null=True)
     points = models.IntegerField(default=0)
 
-    USERNAME_FIELD = "email"  # 기본 로그인 필드를 이메일로 설정
-    REQUIRED_FIELDS = []  # 슈퍼유저 생성 시 추가 필드 없음
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ['nickname']
 
-    objects = CustomUserManager()  # 사용자 관리에 사용되는 커스텀 매니저
+    objects = CustomUserManager()
 
-    # 사용자와 그룹 간의 관계 설정
     groups = models.ManyToManyField(
         Group,
-        related_name="custom_user_set",  # 사용자와 그룹의 관계에서 사용하는 이름
-        blank=True,  # 빈 그룹을 허용
+        related_name="custom_user_set",
+        blank=True,
     )
-    # 사용자와 권한 간의 관계 설정
     user_permissions = models.ManyToManyField(
         Permission,
-        related_name="custom_user_permissions_set",  # 사용자와 권한의 관계에서 사용하는 이름
-        blank=True,  # 빈 권한을 허용
+        related_name="custom_user_permissions_set",
+        blank=True,
     )
 
     class Meta:
-        verbose_name = "user"  # 관리자 화면에 표시될 이름
-        verbose_name_plural = "users"  # 관리자 화면에 표시될 복수형 이름
-        permissions = [
-            # 사용자 정의 권한을 여기에 추가할 수 있습니다.
-        ]
+        verbose_name = "user"
+        verbose_name_plural = "users"
         constraints = [
             models.UniqueConstraint(
                 fields=["email"], name="unique_email"
-            ),  # 이메일 중복 방지
+            ),
             models.UniqueConstraint(
                 fields=["username"], name="unique_username"
-            ),  # 사용자 이름 중복 방지
+            ),
+            models.UniqueConstraint(
+                fields=["nickname"], name="unique_nickname"  # 닉네임 중복 방지
+            ),
         ]
 
 
+class VerificationCode(models.Model):
+    email = models.EmailField(unique=True)
+    code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f'{self.email} - {self.code}'
+    
 class RefreshToken(models.Model):
     """
     리프레시 토큰 모델
@@ -115,3 +118,25 @@ class RefreshToken(models.Model):
                 fields=["token"], name="unique_refresh_token"
             ),  # 리프레시 토큰 중복 방지
         ]
+
+class CustomUserManager(BaseUserManager):
+    def create_superuser(self, email, username, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(email, username, password, **extra_fields)
+
+    def create_user(self, email, username, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
