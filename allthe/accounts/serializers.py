@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import User, RefreshToken
+
+from .models import RefreshToken
+from .models import User
 
 User = get_user_model()
 
@@ -15,8 +17,16 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id", "email", "username", "password", "social_provider",
-            "role", "business_number", "phone_number", "social_id", "points"
+            "id",
+            "email",
+            "username",
+            "password",
+            "social_provider",
+            "role",
+            "business_number",
+            "phone_number",
+            "social_id",
+            "points",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -33,7 +43,9 @@ class UserSerializer(serializers.ModelSerializer):
         """
         password = data.get("password")
         if password and len(password) < 8:
-            raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
+            raise serializers.ValidationError(
+                {"password": "Password must be at least 8 characters long."}
+            )
 
         email = data.get("email")
         if email and User.objects.filter(email=email).exists():
@@ -41,7 +53,9 @@ class UserSerializer(serializers.ModelSerializer):
 
         username = data.get("username")
         if username and User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({"username": "This username is already taken."})
+            raise serializers.ValidationError(
+                {"username": "This username is already taken."}
+            )
 
         return data
 
@@ -58,6 +72,7 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
 class RefreshTokenSerializer(serializers.ModelSerializer):
     """
     리프레시 토큰 직렬화기
@@ -73,9 +88,10 @@ class RefreshTokenSerializer(serializers.ModelSerializer):
         """
         리프레시 토큰 유효성 검사
         """
-        if data['expires_at'] <= timezone.now():
+        if data["expires_at"] <= timezone.now():
             raise serializers.ValidationError({"expires_at": "Token has expired."})
         return data
+
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     """
@@ -107,4 +123,3 @@ class EmailSerializer(serializers.Serializer):
     """
 
     email = serializers.EmailField()
-

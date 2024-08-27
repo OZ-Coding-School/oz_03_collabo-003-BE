@@ -1,17 +1,28 @@
-from django.urls import path, re_path
+from django.urls import path
+from django.urls import re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from .views import (
-    CheckBusinessStatusView,
-    GoogleCallback, GoogleLogin, GoogleLogout,
-    KakaoCallback, KakaoLogin, KakaoLogout,
-    NaverCallback, NaverLogin, NaverLogout,
-    PasswordResetView, RefreshTokenView, UserAccountView,
-    UserLoginView, UserLogoutView, UsernameCheckView,
-    UserProfileView, FinalSignupView, SendVerificationCodeView
-)
+from .views import CheckBusinessStatusView
+from .views import FinalSignupView
+from .views import GoogleCallback
+from .views import GoogleLogin
+from .views import GoogleLogout
+from .views import KakaoCallback
+from .views import KakaoLogin
+from .views import KakaoLogout
+from .views import NaverCallback
+from .views import NaverLogin
+from .views import NaverLogout
+from .views import PasswordResetView
+from .views import RefreshTokenView
+from .views import SendVerificationCodeView
+from .views import UserAccountView
+from .views import UserLoginView
+from .views import UserLogoutView
+from .views import UsernameCheckView
+from .views import UserProfileView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -36,8 +47,11 @@ urlpatterns = [
     path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
     path("account-delete/", UserAccountView.as_view(), name="account-delete"),
     path("check-username/", UsernameCheckView.as_view(), name="check-username"),
-    path("send-verification-code/", SendVerificationCodeView.as_view(), name="send-verification-code"),
-
+    path(
+        "send-verification-code/",
+        SendVerificationCodeView.as_view(),
+        name="send-verification-code",
+    ),
     # 소셜 로그인 관련 API
     path("kakao/login/", KakaoLogin.as_view(), name="kakao-login"),
     path("kakao/callback/", KakaoCallback.as_view(), name="kakao-callback"),
@@ -48,10 +62,10 @@ urlpatterns = [
     path("naver/login/", NaverLogin.as_view(), name="naver-login"),
     path("naver/callback/", NaverCallback.as_view(), name="naver-callback"),
     path("naver/logout/", NaverLogout.as_view(), name="naver-logout"),
-
     # 사업자번호 상태 확인 API
-    path("check-business-status/", CheckBusinessStatusView, name="check-business-status"),
-
+    path(
+        "check-business-status/", CheckBusinessStatusView, name="check-business-status"
+    ),
     # Swagger 문서화 URL
     re_path(
         r"^swagger/$",

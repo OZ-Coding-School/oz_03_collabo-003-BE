@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import random
+
 import jwt
 import requests
 from django.conf import settings
@@ -25,13 +26,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .models import VerificationCode
+from .serializers import EmailSerializer
 from .serializers import PasswordResetConfirmSerializer
 from .serializers import PasswordResetRequestSerializer
 from .serializers import UsernameCheckSerializer
 from .serializers import UserSerializer
-from .serializers import EmailSerializer
-from .models import VerificationCode
-
 
 User = get_user_model()
 
@@ -49,8 +49,6 @@ PORTONE_SECRET = os.getenv("PORTONE_SECRET")
 PORTONE_CHANNEL_KEY = os.getenv("PORTONE_CHANNEL_KEY")
 
 
-
-    
 class UsernameCheckView(APIView):
     def post(self, request):
         serializer = UsernameCheckSerializer(data=request.data)
@@ -58,11 +56,16 @@ class UsernameCheckView(APIView):
             username = serializer.validated_data["username"]
             exists = User.objects.filter(username=username).exists()
             if exists:
-                return Response({"message": "이미 존재하는 닉네임입니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "이미 존재하는 닉네임입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             else:
-                return Response({"message": "사용 가능한 닉네임입니다."}, status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "사용 가능한 닉네임입니다."}, status=status.HTTP_200_OK
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class SendVerificationCodeView(APIView):
     """
@@ -77,7 +80,9 @@ class SendVerificationCodeView(APIView):
 
             # 이메일로 인증 코드 생성 및 저장
             verification_code = str(random.randint(100000, 999999))
-            expires_at = timezone.now() + datetime.timedelta(minutes=10)  # 코드 만료 시간 설정
+            expires_at = timezone.now() + datetime.timedelta(
+                minutes=10
+            )  # 코드 만료 시간 설정
 
             # 인증 코드 저장
             VerificationCode.objects.update_or_create(
@@ -93,9 +98,12 @@ class SendVerificationCodeView(APIView):
                 [email],
             )
 
-            return Response({"detail": "인증 코드가 이메일로 전송되었습니다."}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "인증 코드가 이메일로 전송되었습니다."},
+                status=status.HTTP_200_OK,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class VerifyCodeView(APIView):
     """
@@ -110,16 +118,30 @@ class VerifyCodeView(APIView):
 
         try:
             code_entry = VerificationCode.objects.get(email=email)
-            if code_entry.code == verification_code and timezone.now() <= code_entry.expires_at:
-                return Response({"detail": "인증 코드가 확인되었습니다."}, status=status.HTTP_200_OK)
+            if (
+                code_entry.code == verification_code
+                and timezone.now() <= code_entry.expires_at
+            ):
+                return Response(
+                    {"detail": "인증 코드가 확인되었습니다."}, status=status.HTTP_200_OK
+                )
             elif code_entry.code != verification_code:
-                return Response({"detail": "잘못된 인증 코드입니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "잘못된 인증 코드입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             else:
-                return Response({"detail": "인증 코드가 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "인증 코드가 만료되었습니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except VerificationCode.DoesNotExist:
-            return Response({"detail": "인증 코드가 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
-    
+            return Response(
+                {"detail": "인증 코드가 존재하지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
 class FinalSignupView(APIView):
     """
     최종 회원가입 API
@@ -167,11 +189,9 @@ class FinalSignupView(APIView):
             )
 
         # 사용자 생성
-        serializer = UserSerializer(data={
-            "username": username,
-            "email": email,
-            "password": password
-        })
+        serializer = UserSerializer(
+            data={"username": username, "email": email, "password": password}
+        )
         if serializer.is_valid():
             user = serializer.save()
             user.is_active = True
@@ -180,9 +200,8 @@ class FinalSignupView(APIView):
                 {"detail": "회원가입이 완료되었습니다."},
                 status=status.HTTP_201_CREATED,
             )
-        return Response(
-            serializer.errors, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserLoginView(APIView):
     def post(self, request):

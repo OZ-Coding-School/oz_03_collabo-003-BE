@@ -1,7 +1,8 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.db import models
@@ -26,12 +27,8 @@ class User(AbstractUser):
         blank=True,
         null=True,
     )
-    username = models.CharField(
-        max_length=150, blank=True, null=True, unique=True
-    )
-    nickname = models.CharField(
-        max_length=150, unique=True
-    )  # 새로운 닉네임 필드 추가
+    username = models.CharField(max_length=150, blank=True, null=True, unique=True)
+    nickname = models.CharField(max_length=150, unique=True)  # 새로운 닉네임 필드 추가
     created_at = models.DateTimeField(default=timezone.now)
 
     role = models.CharField(
@@ -50,7 +47,7 @@ class User(AbstractUser):
     points = models.IntegerField(default=0)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ['nickname']
+    REQUIRED_FIELDS = ["nickname"]
 
     objects = CustomUserManager()
 
@@ -69,12 +66,8 @@ class User(AbstractUser):
         verbose_name = "user"
         verbose_name_plural = "users"
         constraints = [
-            models.UniqueConstraint(
-                fields=["email"], name="unique_email"
-            ),
-            models.UniqueConstraint(
-                fields=["username"], name="unique_username"
-            ),
+            models.UniqueConstraint(fields=["email"], name="unique_email"),
+            models.UniqueConstraint(fields=["username"], name="unique_username"),
             models.UniqueConstraint(
                 fields=["nickname"], name="unique_nickname"  # 닉네임 중복 방지
             ),
@@ -87,8 +80,9 @@ class VerificationCode(models.Model):
     expires_at = models.DateTimeField()
 
     def __str__(self):
-        return f'{self.email} - {self.code}'
-    
+        return f"{self.email} - {self.code}"
+
+
 class RefreshToken(models.Model):
     """
     리프레시 토큰 모델
@@ -119,24 +113,24 @@ class RefreshToken(models.Model):
             ),  # 리프레시 토큰 중복 방지
         ]
 
+
 class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, username, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(email, username, password, **extra_fields)
 
     def create_user(self, email, username, password=None, **extra_fields):
         if not email:
-            raise ValueError('The Email field must be set')
+            raise ValueError("The Email field must be set")
         email = self.normalize_email(email)
         user = self.model(email=email, username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
-
