@@ -47,6 +47,7 @@ CUSTOM_APPS = [
     # 소셜로그인
     "django.contrib.sites",
     "rest_framework.authtoken",
+    "corsheaders",
 ]
 
 DEFAULT_APPS = [
@@ -75,6 +76,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = "allthe.urls"
@@ -171,3 +174,31 @@ EMAIL_USE_SSL = False  # SSL 사용 여부
 EMAIL_HOST_USER = "hancycle585@gmail.com"  # 이메일 서버 로그인용 이메일 주소
 EMAIL_HOST_PASSWORD = "awvt ujct gvsu ahlm"  # 이메일 서버 로그인용 비밀번호
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # 이메일 발신자 주소
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # 실제 요청이 발생하는 클라이언트 도메인 추가
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+
+SITE_ID = 1
