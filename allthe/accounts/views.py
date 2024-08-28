@@ -225,9 +225,9 @@ class UserLoginView(APIView):
         }
         access_token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
-        # Refresh Token 생성 및 저장
-        expires_at = timezone.now() + datetime.timedelta(days=30)
-        refresh_token = RefreshToken.objects.create(user=user, expires_at=expires_at)
+        # Refresh Token 생성
+        refresh = RefreshToken.for_user(user)
+        refresh_token = str(refresh)
 
         response = Response(
             {
@@ -236,6 +236,7 @@ class UserLoginView(APIView):
                 "username": user.username,
             }
         )
+
         # 쿠키에 토큰 설정
         response.set_cookie(
             key="jwt",
@@ -245,9 +246,9 @@ class UserLoginView(APIView):
         )
         response.set_cookie(
             key="refresh_token",
-            value=str(refresh_token.token),
+            value=refresh_token,
             httponly=True,
-            expires=expires_at,
+            expires=timezone.now() + datetime.timedelta(days=30),
         )
 
         return response
