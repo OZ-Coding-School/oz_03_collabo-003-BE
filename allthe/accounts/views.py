@@ -485,7 +485,9 @@ class KakaoLogin(APIView):
     def get(self, request):
         redirect_uri = "http://localhost:5173/accounts/kakao/login/callback/"
         kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_APP_KEY}&redirect_uri={redirect_uri}&response_type=code"
-        return redirect(kakao_auth_url)
+        response = redirect(kakao_auth_url)
+        response["Cross-Origin-Opener-Policy"] = "same-origin"
+        return response
 
 
 class KakaoCallback(APIView):
