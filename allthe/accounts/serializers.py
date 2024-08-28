@@ -49,6 +49,13 @@ class UserSerializer(serializers.ModelSerializer):
         if email and User.objects.filter(email=email).exists():
             raise serializers.ValidationError({"email": "This email is already taken."})
 
+        # 닉네임 중복성 검사
+        username = data.get("username")
+        if username and User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                {"username": "This username is already taken."}
+            )
+
         return data
 
     def create(self, validated_data):
@@ -94,3 +101,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     """
 
     password = serializers.CharField(write_only=True, min_length=8)
+
+
+# 닉네임 중복 검사
+class UsernameCheckSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
