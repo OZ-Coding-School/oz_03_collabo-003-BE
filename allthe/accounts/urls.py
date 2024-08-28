@@ -23,6 +23,7 @@ from .views import UserLoginView
 from .views import UserLogoutView
 from .views import UsernameCheckView
 from .views import UserProfileView
+from .views import VerifyCodeView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -52,6 +53,7 @@ urlpatterns = [
         SendVerificationCodeView.as_view(),
         name="send-verification-code",
     ),
+    path("verify-code/", VerifyCodeView.as_view(), name="verify_code"),
     # 소셜 로그인 관련 API
     path("kakao/login/", KakaoLogin.as_view(), name="kakao-login"),
     path("kakao/callback/", KakaoCallback.as_view(), name="kakao-callback"),
