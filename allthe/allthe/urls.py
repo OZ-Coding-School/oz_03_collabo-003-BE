@@ -15,6 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from analysis.views import AnalystDetail
+from analysis.views import AnalystListCreate
 from django.contrib import admin
 from django.urls import include
 from django.urls import path
@@ -41,6 +43,8 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("contents/", include("contents.urls")),
     path("request/", include("analysis.urls")),
+    path("analysts/", AnalystListCreate.as_view(), name="analyst-list-create"),
+    path("analysts/<int:pk>/", AnalystDetail.as_view(), name="analyst-detail"),
     # Swagger UI
     path(
         "swagger/",

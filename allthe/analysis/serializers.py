@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from .models import AnalysisReport
 from .models import AnalysisRequest
+from .models import Analyst
 from .models import User
 
 
@@ -49,7 +50,18 @@ class AnalysisReportSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# 분석가 시리얼라이저
 class AnalystSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source="user.email", read_only=True)
+
     class Meta:
-        model = User
-        fields = ["id", "username", "email"]
+        model = Analyst
+        fields = [
+            "id",
+            "user",
+            "user_email",
+            "photo",
+            "introduction",
+            "strengths",
+            "message",
+        ]
