@@ -56,13 +56,13 @@ urlpatterns = [
     path("verify-code/", VerifyCodeView.as_view(), name="verify_code"),
     # 소셜 로그인 관련 API
     path("kakao/login/", KakaoLogin.as_view(), name="kakao-login"),
-    path("kakao/callback/", KakaoCallback.as_view(), name="kakao-callback"),
+    path("kakao/login/callback/", KakaoCallback.as_view(), name="kakao-callback"),
     path("kakao/logout/", KakaoLogout.as_view(), name="kakao-logout"),
     path("google/login/", GoogleLogin.as_view(), name="google-login"),
-    path("google/callback/", GoogleCallback.as_view(), name="google-callback"),
+    path("google/login/callback/", GoogleCallback.as_view(), name="google-callback"),
     path("google/logout/", GoogleLogout.as_view(), name="google-logout"),
     path("naver/login/", NaverLogin.as_view(), name="naver-login"),
-    path("naver/callback/", NaverCallback.as_view(), name="naver-callback"),
+    path("naver/login/callback/", NaverCallback.as_view(), name="naver-callback"),
     path("naver/logout/", NaverLogout.as_view(), name="naver-logout"),
     # 사업자번호 상태 확인 API
     path(

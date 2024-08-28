@@ -483,7 +483,7 @@ class KakaoLogin(APIView):
         responses={302: "Redirects to Kakao authorization page"},
     )
     def get(self, request):
-        redirect_uri = "http://127.0.0.1:8000/accounts/kakao/login/callback/"
+        redirect_uri = "http://localhost:5173/accounts/kakao/login/callback/"
         kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_APP_KEY}&redirect_uri={redirect_uri}&response_type=code"
         return redirect(kakao_auth_url)
 
@@ -529,7 +529,7 @@ class KakaoCallback(APIView):
             "grant_type": "authorization_code",
             "client_id": KAKAO_APP_KEY,
             "client_secret": KAKAO_SECRET,
-            "redirect_uri": "http://127.0.0.1:8000/accounts/kakao/login/callback/",
+            "redirect_uri": "http://localhost:5173/accounts/kakao/login/callback/",
             "code": code,
         }
 
@@ -564,6 +564,7 @@ class KakaoCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
+                "nickname": username,
                 # "role":"client"
             },
         )
@@ -571,18 +572,16 @@ class KakaoCallback(APIView):
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        response = Response(
-            {
-                "message": "Login successful",
-                "access_token": jwt_access_token,
-                "user_info": user_info,
-            },
-            status=status.HTTP_200_OK,
-        )
+        # Redirect URL with query parameters
+        redirect_url = f"http://localhost:5173/redirect?userId={user.id}&nickname={username}&email={email}"
+
+        # Create a response with cookies
+        response = HttpResponse()  # Create an empty HttpResponse
+
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
@@ -590,11 +589,16 @@ class KakaoCallback(APIView):
         response.set_cookie(
             "kakao_access_token",
             access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
         )
+
+        # Redirect to the frontend URL
+        response["Location"] = redirect_url
+        response.status_code = 302  # HTTP status code for redirection
+
         return response
 
 
@@ -717,25 +721,24 @@ class GoogleCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
-                "role": "analyst",
+                "nickname": username,
+                # "role": "analyst",
             },
         )
 
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        response = Response(
-            {
-                "message": "Login successful",
-                "access_token": jwt_access_token,
-                "user_info": user_info,
-            },
-            status=status.HTTP_200_OK,
-        )
+        # Redirect URL with query parameters
+        redirect_url = f"http://localhost:5173/redirect?userId={user.id}&nickname={username}&email={email}"
+
+        # Create a response with cookies
+        response = HttpResponse()  # Create an empty HttpResponse
+
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
@@ -743,11 +746,15 @@ class GoogleCallback(APIView):
         response.set_cookie(
             "google_access_token",
             access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
         )
+
+        # Redirect to the frontend URL
+        response["Location"] = redirect_url
+        response.status_code = 302  # HTTP status code for redirection
 
         return response
 
@@ -870,24 +877,23 @@ class NaverCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
+                "nickname": username,
             },
         )
 
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        response = Response(
-            {
-                "message": "Login successful",
-                "access_token": jwt_access_token,
-                "user_info": user_info,
-            },
-            status=status.HTTP_200_OK,
-        )
+        # Redirect URL with query parameters
+        redirect_url = f"http://localhost:5173/redirect?userId={user.id}&nickname={username}&email={email}"
+
+        # Create a response with cookies
+        response = HttpResponse()  # Create an empty HttpResponse
+
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
@@ -895,11 +901,15 @@ class NaverCallback(APIView):
         response.set_cookie(
             "naver_access_token",
             access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
         )
+
+        # Redirect to the frontend URL
+        response["Location"] = redirect_url
+        response.status_code = 302  # HTTP status code for redirection
 
         return response
 
