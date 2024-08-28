@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import random
 
 import jwt
 import requests
@@ -25,6 +26,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .models import VerificationCode
+from .serializers import EmailSerializer
 from .serializers import PasswordResetConfirmSerializer
 from .serializers import PasswordResetRequestSerializer
 from .serializers import UsernameCheckSerializer
@@ -46,120 +49,157 @@ PORTONE_SECRET = os.getenv("PORTONE_SECRET")
 PORTONE_CHANNEL_KEY = os.getenv("PORTONE_CHANNEL_KEY")
 
 
-class UserRegistrationView(APIView):
-    def post(self, request):
-        """
-        회원가입 요청 API
-        - 사용자가 입력한 이메일로 회원가입 확인 링크를 포함한 이메일을 발송합니다.
-        - 이메일이 이미 존재하는 경우, 에러 메시지를 반환합니다.
-        """
-        serializer = UserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data.get("email")
-
-        # 이메일이 이미 존재하는지 확인
-        user = User.objects.filter(email=email).first()
-        if user:
-            return Response(
-                {"detail": "이미 존재하는 이메일입니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # 이메일 인증을 위한 JWT 토큰 생성
-        payload = {
-            "email": email,
-            "exp": timezone.now() + datetime.timedelta(hours=1),
-        }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-
-        # 회원가입 확인 URL 생성
-        registration_url = request.build_absolute_uri(
-            reverse("registration-confirm") + f"?token={token}"
-        )
-
-        # 이메일 발송
-        send_mail(
-            "회원가입 확인",
-            f"안녕하세요,\n\n회원가입을 완료하려면 다음 링크를 클릭하십시오:\n{registration_url}\n\n링크는 1시간 동안 유효합니다.",
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-        )
-
-        return Response({"detail": "회원가입 확인 이메일을 전송했습니다."})
-
-    def get(self, request):
-        """
-        회원가입 확인 API
-        - 이메일 인증 토큰을 통해 사용자를 활성화하고 회원가입을 완료합니다.
-        - 유효하지 않은 토큰 또는 만료된 토큰에 대한 처리를 포함합니다.
-        """
-        token = request.query_params.get("token")
-        if not token:
-            return Response(
-                {"detail": "Token is required"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            # JWT 토큰 디코딩 및 검증
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            email = payload.get("email")
-            if not email:
-                return Response(
-                    {"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # 사용자 조회
-            user = User.objects.filter(email=email).first()
-            if not user:
-                # 새로운 사용자 생성 및 활성화
-                serializer = UserSerializer(
-                    data={"email": email, "password": "defaultpassword"}
-                )
-                if serializer.is_valid():
-                    user = serializer.save()
-                    user.is_active = True
-                    user.save()
-                else:
-                    return Response(
-                        serializer.errors, status=status.HTTP_400_BAD_REQUEST
-                    )
-            else:
-                if user.is_active:
-                    return Response(
-                        {"detail": "User already active"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                # 기존 사용자 활성화
-                user.is_active = True
-                user.save()
-
-            return Response(
-                {"detail": "회원가입이 완료되었습니다."}, status=status.HTTP_200_OK
-            )
-
-        except jwt.ExpiredSignatureError:
-            return Response(
-                {"detail": "토큰이 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST
-            )
-        except jwt.InvalidTokenError:
-            return Response(
-                {"detail": "유효하지 않은 토큰입니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-
 class UsernameCheckView(APIView):
-    """
-    사용자 이름 중복 확인 API
-    - 제공된 사용자 이름이 이미 사용 중인지 확인합니다.
-    """
-
     def post(self, request):
         serializer = UsernameCheckSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data["username"]
             exists = User.objects.filter(username=username).exists()
-            return Response({"exists": exists}, status=status.HTTP_200_OK)
+            if exists:
+                return Response(
+                    {"message": "이미 존재하는 닉네임입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            else:
+                return Response(
+                    {"message": "사용 가능한 닉네임입니다."}, status=status.HTTP_200_OK
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendVerificationCodeView(APIView):
+    """
+    이메일로 인증 코드를 전송하는 API
+    - 사용자가 제공한 이메일 주소로 인증 코드를 발송합니다.
+    """
+
+    def post(self, request):
+        serializer = EmailSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+
+            # 이메일로 인증 코드 생성 및 저장
+            verification_code = str(random.randint(100000, 999999))
+            expires_at = timezone.now() + datetime.timedelta(
+                minutes=10
+            )  # 코드 만료 시간 설정
+
+            # 인증 코드 저장
+            VerificationCode.objects.update_or_create(
+                email=email,
+                defaults={"code": verification_code, "expires_at": expires_at},
+            )
+
+            # 인증 코드 발송
+            send_mail(
+                "인증 코드 발송",
+                f"안녕하세요,\n\n회원가입을 진행하려면 다음 인증 코드를 입력하십시오:\n{verification_code}\n\n코드는 10분 동안 유효합니다.",
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+            )
+
+            return Response(
+                {"detail": "인증 코드가 이메일로 전송되었습니다."},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyCodeView(APIView):
+    """
+    인증 코드를 확인하는 API
+    - 제공된 인증 코드가 유효한지 확인합니다.
+    """
+
+    def post(self, request):
+        data = request.data
+        email = data.get("email")
+        verification_code = data.get("verification_code")
+
+        try:
+            code_entry = VerificationCode.objects.get(email=email)
+            if (
+                code_entry.code == verification_code
+                and timezone.now() <= code_entry.expires_at
+            ):
+                return Response(
+                    {"detail": "인증 코드가 확인되었습니다."}, status=status.HTTP_200_OK
+                )
+            elif code_entry.code != verification_code:
+                return Response(
+                    {"detail": "잘못된 인증 코드입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            else:
+                return Response(
+                    {"detail": "인증 코드가 만료되었습니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except VerificationCode.DoesNotExist:
+            return Response(
+                {"detail": "인증 코드가 존재하지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class FinalSignupView(APIView):
+    """
+    최종 회원가입 API
+    - 인증 코드가 확인된 후 사용자 계정을 최종 등록합니다.
+    """
+
+    def post(self, request):
+        data = request.data
+        username = data.get("username")
+        email = data.get("email")
+        verification_code = data.get("verification_code")
+        password = data.get("password")
+
+        # 사용자 이름 중복 확인
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"detail": "사용자 이름이 이미 존재합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 이메일 인증 코드 검증
+        try:
+            code_entry = VerificationCode.objects.get(email=email)
+            if code_entry.code != verification_code:
+                return Response(
+                    {"detail": "잘못된 인증 코드입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if timezone.now() > code_entry.expires_at:
+                return Response(
+                    {"detail": "인증 코드가 만료되었습니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except VerificationCode.DoesNotExist:
+            return Response(
+                {"detail": "이메일 인증 코드가 존재하지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 이메일이 이미 존재하는 경우
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {"detail": "이메일이 이미 존재합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 사용자 생성
+        serializer = UserSerializer(
+            data={"username": username, "email": email, "password": password}
+        )
+        if serializer.is_valid():
+            user = serializer.save()
+            user.is_active = True
+            user.save()
+            return Response(
+                {"detail": "회원가입이 완료되었습니다."},
+                status=status.HTTP_201_CREATED,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from .models import RefreshToken
+from .models import User
+
 User = get_user_model()
 
 
@@ -18,38 +21,36 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "username",
             "password",
+            "social_provider",
+            "role",
+            "business_number",
+            "phone_number",
+            "social_id",
+            "points",
         ]
         extra_kwargs = {
-            "password": {
-                "write_only": True
-            },  # 비밀번호는 읽기 전용 필드로 설정하여 반환되지 않음
-            "email": {"required": True},  # 이메일 필드는 필수 입력 사항
-            "username": {
-                "required": False,
-                "allow_blank": True,
-            },  # 사용자 이름은 선택 사항이며 공백 허용
+            "password": {"write_only": True},
+            "email": {"required": True},
+            "username": {"required": True, "allow_blank": False},
         }
 
-    # 사용자 데이터를 검증
     def validate(self, data):
         """
         데이터 유효성 검사
         - 비밀번호 길이 검사: 비밀번호는 최소 8자 이상이어야 합니다.
         - 이메일 중복 검사: 제공된 이메일이 이미 사용 중인지 확인합니다.
+        - 사용자 이름 중복 검사: 제공된 사용자 이름이 이미 사용 중인지 확인합니다.
         """
-        # 비밀번호 길이 검사
         password = data.get("password")
         if password and len(password) < 8:
             raise serializers.ValidationError(
                 {"password": "Password must be at least 8 characters long."}
             )
 
-        # 이메일 중복성 검사
         email = data.get("email")
         if email and User.objects.filter(email=email).exists():
             raise serializers.ValidationError({"email": "This email is already taken."})
 
-        # 닉네임 중복성 검사
         username = data.get("username")
         if username and User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
@@ -64,25 +65,32 @@ class UserSerializer(serializers.ModelSerializer):
         - 유효성 검사를 통과한 데이터를 사용하여 새로운 사용자 인스턴스를 생성합니다.
         - 비밀번호는 해싱하여 저장합니다.
         """
-        password = validated_data.pop(
-            "password", None
-        )  # 비밀번호를 유효성 검사 후 제거
-        username = validated_data.get("username")
-        if not username:
-            # 사용자 이름이 제공되지 않은 경우 기본 사용자 이름 생성
-            username = self.generate_default_username(validated_data["email"])
-        user = User(**validated_data, username=username)
+        password = validated_data.pop("password", None)
+        user = User(**validated_data)
         if password:
-            user.set_password(password)  # 비밀번호 해싱
+            user.set_password(password)
         user.save()
         return user
 
-    def generate_default_username(self, email):
+
+class RefreshTokenSerializer(serializers.ModelSerializer):
+    """
+    리프레시 토큰 직렬화기
+    - 리프레시 토큰 정보를 직렬화합니다.
+    """
+
+    class Meta:
+        model = RefreshToken
+        fields = ["user", "token", "created_at", "expires_at"]
+        read_only_fields = ["token", "created_at"]
+
+    def validate(self, data):
         """
-        기본 사용자 이름 생성
-        - 이메일을 기반으로 기본 사용자 이름을 생성합니다.
+        리프레시 토큰 유효성 검사
         """
-        return email.split("@")[0]
+        if data["expires_at"] <= timezone.now():
+            raise serializers.ValidationError({"expires_at": "Token has expired."})
+        return data
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -106,3 +114,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 # 닉네임 중복 검사
 class UsernameCheckSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
+
+
+class EmailSerializer(serializers.Serializer):
+    """
+    이메일 주소를 직렬화하는 직렬화기
+    - 사용자가 인증 코드를 요청할 때 이메일 주소를 수집합니다.
+    """
+
+    email = serializers.EmailField()
