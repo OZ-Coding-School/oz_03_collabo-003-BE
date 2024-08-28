@@ -31,7 +31,7 @@ class AnalysisRequest(models.Model):
 
 class AnalysisReport(models.Model):
     request = models.OneToOneField(AnalysisRequest, on_delete=models.CASCADE)
-    url = models.CharField(max_length=255)
+    file = models.FileField(upload_to="reports/")
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -39,7 +39,9 @@ class Analyst(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="analyst_profile"
     )
-    analyst_image = models.ImageField(upload_to="analyst_photos/", blank=True, null=True)
+    analyst_image = models.ImageField(
+        upload_to="analyst_photos/", blank=True, null=True
+    )
     intro = models.TextField(blank=True, null=True)
     merit = models.TextField(blank=True, null=True)
     summary = models.TextField(blank=True, null=True)
