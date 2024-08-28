@@ -52,16 +52,10 @@ class AnalysisReportSerializer(serializers.ModelSerializer):
 
 # 분석가 시리얼라이저
 class AnalystSerializer(serializers.ModelSerializer):
+    user_id=serializers.CharField(source="user.id", read_only=True)
     user_email = serializers.CharField(source="user.email", read_only=True)
+    user_name = serializers.CharField(source="user.username", read_only=True)
 
     class Meta:
         model = Analyst
-        fields = [
-            "id",
-            "user",
-            "user_email",
-            "photo",
-            "introduction",
-            "strengths",
-            "message",
-        ]
+        fields = "__all__"
