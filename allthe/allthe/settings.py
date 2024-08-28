@@ -47,7 +47,7 @@ CUSTOM_APPS = [
     # 소셜로그인
     "django.contrib.sites",
     "rest_framework.authtoken",
-    'corsheaders',
+    "corsheaders",
 ]
 
 DEFAULT_APPS = [
@@ -76,8 +76,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = "allthe.urls"
@@ -202,4 +202,3 @@ CORS_ALLOW_HEADERS = [
 
 
 SITE_ID = 1
-
