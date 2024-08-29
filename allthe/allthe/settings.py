@@ -31,7 +31,7 @@ SECRET_KEY = "django-insecure-&!0y$4(o$ynya*^2zft%_el3mf)_-8489w*^s*tb%9*_u)w!jo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "223.130.128.216"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "223.130.128.216", "api.allthe.live"]
 
 AUTH_USER_MODEL = "accounts.User"
 # Application definition
