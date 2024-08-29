@@ -538,3 +538,83 @@ class CheckAnalysisReport(APIView):
 
         serializer = AnalysisReportSerializer(report)
         return Response(serializer.data)
+
+
+from .models import Analyst
+from .serializers import AnalystSerializer
+
+
+# 분석가 리스트 조회 및 생성 뷰
+class AnalystListCreate(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
+    @swagger_auto_schema(
+        operation_description="모든 분석가 목록을 조회하거나 새 분석가를 생성합니다.",
+        responses={200: AnalystSerializer(many=True), 201: AnalystSerializer},
+    )
+    def get(self, request):
+        # 모든 분석가 객체를 조회합니다.
+        analysts = Analyst.objects.all()
+        serializer = AnalystSerializer(analysts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        request_body=AnalystSerializer,
+        responses={201: AnalystSerializer},
+    )
+    def post(self, request):
+        # 새 분석가 객체를 생성합니다.
+        serializer = AnalystSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# 특정 분석가의 상세 조회, 업데이트 및 삭제 뷰
+class AnalystDetail(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
+    def get_object(self, pk):
+        try:
+            return Analyst.objects.get(pk=pk)
+        except Analyst.DoesNotExist:
+            return None
+
+    @swagger_auto_schema(
+        operation_description="특정 ID의 분석가를 조회합니다.",
+        responses={200: AnalystSerializer, 404: "Not found"},
+    )
+    # 특정 ID의 분석가를 조회
+    def get(self, request, pk):
+        analyst = self.get_object(pk)
+        if analyst is not None:
+            serializer = AnalystSerializer(analyst)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    @swagger_auto_schema(
+        request_body=AnalystSerializer,
+        responses={200: AnalystSerializer, 404: "Not found"},
+    )
+    # 특정 ID의 분석가 정보를 수정
+    def put(self, request, pk):
+        analyst = self.get_object(pk)
+        if analyst is not None:
+            serializer = AnalystSerializer(analyst, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    @swagger_auto_schema(
+        responses={204: "No content", 404: "Not found"},
+    )
+    # 특정 ID의 분석가를 삭제
+    def delete(self, request, pk, *args, **kwargs):
+        analyst = self.get_object(pk)
+        if analyst is not None:
+            analyst.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
