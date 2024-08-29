@@ -28,7 +28,7 @@ class User(AbstractUser):
         null=True,
     )
     username = models.CharField(max_length=150, blank=True, null=True, unique=True)
-    nickname = models.CharField(max_length=150, unique=True)  # 새로운 닉네임 필드 추가
+    nickname = models.CharField(max_length=150, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     role = models.CharField(

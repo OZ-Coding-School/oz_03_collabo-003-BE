@@ -18,6 +18,7 @@ from .views import NaverLogout
 from .views import PasswordResetView
 from .views import RefreshTokenView
 from .views import SendVerificationCodeView
+from .views import UpdateRoleView
 from .views import UserAccountView
 from .views import UserLoginView
 from .views import UserLogoutView
@@ -54,6 +55,7 @@ urlpatterns = [
         name="send-verification-code",
     ),
     path("verify-code/", VerifyCodeView.as_view(), name="verify_code"),
+    path("me/role/", UpdateRoleView.as_view(), name="update_role"),
     # 소셜 로그인 관련 API
     path("kakao/login/", KakaoLogin.as_view(), name="kakao-login"),
     path("kakao/login/callback/", KakaoCallback.as_view(), name="kakao-callback"),
