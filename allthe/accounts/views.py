@@ -243,12 +243,14 @@ class UserLoginView(APIView):
             value=access_token,
             httponly=True,
             expires=timezone.now() + datetime.timedelta(days=7),
+            domain=".localhost",
         )
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
             expires=timezone.now() + datetime.timedelta(days=30),
+            domain=".localhost",
         )
 
         return response
