@@ -330,6 +330,27 @@ class RefreshTokenView(APIView):
             )
 
 
+class UpdateRoleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        role = request.data.get("role")
+
+        if role not in ["user", "analyst", "client"]:
+            return Response(
+                {"error": "Invalid role provided."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.role = role
+        user.save()
+
+        return Response(
+            {"message": "User role updated successfully.", "role": user.role},
+            status=status.HTTP_200_OK,
+        )
+
+
 class PasswordResetView(APIView):
     def post(self, request):
         """
@@ -354,7 +375,7 @@ class PasswordResetView(APIView):
         user = User.objects.filter(email=email).first()
         if not user:
             return Response(
-                {"detail": "User with this email does not exist."},
+                {"detail": "해당 이메일을 가진 사용자가 존재하지 않습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -365,19 +386,19 @@ class PasswordResetView(APIView):
             "exp": timezone.now() + datetime.timedelta(hours=1),
         }
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-        reset_url = request.build_absolute_uri(
-            reverse("password-reset-confirm") + f"?token={token}"
-        )
+
+        # 프론트엔드의 패스워드 리셋 URL 설정
+        reset_url = f"http://localhost:5173/password-reset?token={token}"
 
         # 이메일 발송
         send_mail(
-            "Password Reset Request",
-            f"Hello,\n\nYou requested a password reset. Click the following link to reset your password:\n{reset_url}\n\nIf you did not request this, please ignore this email.",
+            "비밀번호 재설정 요청",
+            f"안녕하세요,\n\n비밀번호 재설정을 요청하셨습니다. 비밀번호를 재설정하려면 다음 링크를 클릭하세요:\n{reset_url}\n\n만약 이 요청을 하지 않으셨다면, 이 이메일을 무시해주세요.",
             settings.DEFAULT_FROM_EMAIL,
             [email],
         )
 
-        return Response({"reset_url": reset_url})
+        return Response({"detail": "비밀번호 재설정 링크가 이메일로 전송되었습니다."})
 
     def reset_password(self, request):
         """
@@ -395,21 +416,23 @@ class PasswordResetView(APIView):
             user = User.objects.filter(id=payload["id"], email=payload["email"]).first()
             if not user:
                 return Response(
-                    {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+                    {"detail": "사용자를 찾을 수 없습니다."},
+                    status=status.HTTP_404_NOT_FOUND,
                 )
 
             # 비밀번호 설정
             user.set_password(new_password)
             user.save()
-            return Response({"detail": "Password has been reset successfully."})
+            return Response({"detail": "비밀번호가 성공적으로 재설정되었습니다."})
 
         except jwt.ExpiredSignatureError:
             return Response(
-                {"detail": "Token has expired."}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "토큰이 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST
             )
         except jwt.InvalidTokenError:
             return Response(
-                {"detail": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "유효하지 않은 토큰입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
