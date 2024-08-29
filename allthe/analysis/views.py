@@ -8,10 +8,12 @@ from rest_framework.views import APIView
 
 from .models import AnalysisReport
 from .models import AnalysisRequest
+from .models import Analyst
 from .serializers import AnalysisReportSerializer
 from .serializers import AnalysisRequestSerializer
 from .serializers import AnalysisRequestSerializerDetail
 from .serializers import AnalysisRequestSerializerList
+from .serializers import AnalystSerializer
 from .serializers import UserSerializer
 
 
@@ -172,6 +174,7 @@ class AcceptAnalysisRequest(APIView):
         return Response({"status": "요청이 수락되었습니다."})
 
 
+# 의뢰자별 분석 요청 목록 리스트
 class AnalysisRequestList(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
 
@@ -540,10 +543,6 @@ class CheckAnalysisReport(APIView):
         return Response(serializer.data)
 
 
-from .models import Analyst
-from .serializers import AnalystSerializer
-
-
 # 분석가 리스트 조회 및 생성 뷰
 class AnalystListCreate(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
@@ -553,7 +552,7 @@ class AnalystListCreate(APIView):
         responses={200: AnalystSerializer(many=True), 201: AnalystSerializer},
     )
     def get(self, request):
-        # 모든 분석가 객체를 조회합니다.
+        # 모든 분석가 객체를 조회
         analysts = Analyst.objects.all()
         serializer = AnalystSerializer(analysts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -563,9 +562,17 @@ class AnalystListCreate(APIView):
         responses={201: AnalystSerializer},
     )
     def post(self, request):
-        # 새 분석가 객체를 생성합니다.
+        # 요청한 사용자가 분석가인지 확인
+        if request.user.role != "analyst":
+            return Response(
+                {"error": "Only analysts can make profile."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        # 새 분석가 객체를 생성
         serializer = AnalystSerializer(data=request.data)
         if serializer.is_valid():
+            # 현재 사용자를 프로필 생성자(user)로 설정
+            serializer.validated_data["user"] = request.user
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -577,7 +584,7 @@ class AnalystDetail(APIView):
 
     def get_object(self, pk):
         try:
-            return Analyst.objects.get(pk=pk)
+            return Analyst.objects.get(user=pk)
         except Analyst.DoesNotExist:
             return None
 
@@ -585,9 +592,8 @@ class AnalystDetail(APIView):
         operation_description="특정 ID의 분석가를 조회합니다.",
         responses={200: AnalystSerializer, 404: "Not found"},
     )
-    # 특정 ID의 분석가를 조회
     def get(self, request, pk):
-        analyst = self.get_object(pk)
+        analyst = Analyst.objects.get(user=pk)
         if analyst is not None:
             serializer = AnalystSerializer(analyst)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -597,10 +603,16 @@ class AnalystDetail(APIView):
         request_body=AnalystSerializer,
         responses={200: AnalystSerializer, 404: "Not found"},
     )
-    # 특정 ID의 분석가 정보를 수정
     def put(self, request, pk):
-        analyst = self.get_object(pk)
+        analyst = Analyst.objects.get(user=pk)
         if analyst is not None:
+            # 프로필 소유자인지 확인
+            if analyst.user != request.user:
+                return Response(
+                    {"detail": "You do not have permission to edit this profile."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
             serializer = AnalystSerializer(analyst, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
@@ -611,10 +623,16 @@ class AnalystDetail(APIView):
     @swagger_auto_schema(
         responses={204: "No content", 404: "Not found"},
     )
-    # 특정 ID의 분석가를 삭제
     def delete(self, request, pk, *args, **kwargs):
         analyst = self.get_object(pk)
         if analyst is not None:
+            # 프로필 소유자인지 확인
+            if analyst.user != request.user:
+                return Response(
+                    {"detail": "You do not have permission to delete this profile."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
             analyst.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
