@@ -40,13 +40,14 @@ load_dotenv()
 
 KAKAO_APP_KEY = os.getenv("KAKAO_APP_KEY")
 KAKAO_SECRET = os.getenv("KAKAO_SECRET")
+KAKAO_URI = os.getenv("KAKAO_URI")
 GOOGLE_APP_KEY = os.getenv("GOOGLE_APP_KEY")
 GOOGLE_SECRET = os.getenv("GOOGLE_SECRET")
+GOOGLE_URI = os.getenv("GOOGLE_URI")
 NAVER_APP_KEY = os.getenv("NAVER_APP_KEY")
 NAVER_SECRET = os.getenv("NAVER_SECRET")
-PORTONE_APP_KEY = os.getenv("PORTONE_APP_KEY")
-PORTONE_SECRET = os.getenv("PORTONE_SECRET")
-PORTONE_CHANNEL_KEY = os.getenv("PORTONE_CHANNEL_KEY")
+NAVER_URI = os.getenv("NAVER_URI")
+FRONT_DOMAIN = os.getenv("FRONT_DOMAIN")
 
 
 class UsernameCheckView(APIView):
@@ -508,7 +509,7 @@ class KakaoLogin(APIView):
         responses={302: "Redirects to Kakao authorization page"},
     )
     def get(self, request):
-        redirect_uri = "https://api.allthe.store/accounts/kakao/login/callback/"
+        redirect_uri = KAKAO_URI
         kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={KAKAO_APP_KEY}&redirect_uri={redirect_uri}&response_type=code"
         response = redirect(kakao_auth_url)
         response["Cross-Origin-Opener-Policy"] = "same-origin"
@@ -556,7 +557,7 @@ class KakaoCallback(APIView):
             "grant_type": "authorization_code",
             "client_id": KAKAO_APP_KEY,
             "client_secret": KAKAO_SECRET,
-            "redirect_uri": "http://localhost:5173/accounts/kakao/login/callback/",
+            "redirect_uri": KAKAO_URI,
             "code": code,
         }
 
@@ -599,7 +600,9 @@ class KakaoCallback(APIView):
         jwt_access_token = str(refresh.access_token)
 
         # Redirect URL with query parameters
-        redirect_url = f"http://localhost:5173/redirect?userId={user.id}&nickname={username}&email={email}"
+        redirect_url = (
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        )
 
         # Create a response with cookies
         response = HttpResponse()  # Create an empty HttpResponse
@@ -667,7 +670,7 @@ class GoogleLogin(APIView):
         responses={302: "Redirects to Google authorization page"},
     )
     def get(self, request):
-        redirect_uri = "http://127.0.0.1:8000/accounts/google/login/callback/"
+        redirect_uri = GOOGLE_URI
         google_auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={GOOGLE_APP_KEY}&redirect_uri={redirect_uri}&response_type=code&scope=email%20profile"
         return redirect(google_auth_url)
 
@@ -712,7 +715,7 @@ class GoogleCallback(APIView):
             "grant_type": "authorization_code",
             "client_id": GOOGLE_APP_KEY,
             "client_secret": GOOGLE_SECRET,
-            "redirect_uri": "http://127.0.0.1:8000/accounts/google/login/callback/",
+            "redirect_uri": GOOGLE_URI,
             "code": code,
         }
 
@@ -755,7 +758,9 @@ class GoogleCallback(APIView):
         jwt_access_token = str(refresh.access_token)
 
         # Redirect URL with query parameters
-        redirect_url = f"http://localhost:5173/redirect?userId={user.id}&nickname={username}&email={email}"
+        redirect_url = (
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        )
 
         # Create a response with cookies
         response = HttpResponse()  # Create an empty HttpResponse
@@ -819,7 +824,7 @@ class NaverLogin(APIView):
         responses={302: "Redirects to Naver authorization page"},
     )
     def get(self, request):
-        redirect_uri = "http://127.0.0.1:8000/accounts/naver/login/callback/"
+        redirect_uri = NAVER_URI
         state = "random_state"
         naver_auth_url = f"https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id={NAVER_APP_KEY}&redirect_uri={redirect_uri}&state={state}"
         return redirect(naver_auth_url)
@@ -866,7 +871,7 @@ class NaverCallback(APIView):
             "grant_type": "authorization_code",
             "client_id": NAVER_APP_KEY,
             "client_secret": NAVER_SECRET,
-            "redirect_uri": "http://127.0.0.1:8000/accounts/naver/login/callback/",
+            "redirect_uri": NAVER_URI,
             "code": code,
             "state": state,
         }
@@ -909,7 +914,9 @@ class NaverCallback(APIView):
         jwt_access_token = str(refresh.access_token)
 
         # Redirect URL with query parameters
-        redirect_url = f"http://localhost:5173/redirect?userId={user.id}&nickname={username}&email={email}"
+        redirect_url = (
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        )
 
         # Create a response with cookies
         response = HttpResponse()  # Create an empty HttpResponse
