@@ -47,6 +47,11 @@ urlpatterns = [
     path("logout/", UserLogoutView.as_view(), name="user-logout"),
     path("refresh-token/", RefreshTokenView.as_view(), name="refresh-token"),
     path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
+    path(
+        "password-reset/confirm",
+        PasswordResetView.as_view(),
+        name="password-reset-confirm",
+    ),
     path("account-delete/", UserAccountView.as_view(), name="account-delete"),
     path("check-username/", UsernameCheckView.as_view(), name="check-username"),
     path(
