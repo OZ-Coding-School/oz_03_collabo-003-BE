@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -596,16 +597,18 @@ class KakaoCallback(APIView):
             },
         )
 
+        # JWT 토큰 생성
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        # Redirect URL with query parameters
         redirect_url = (
             f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
         )
 
         # Create a response with cookies
-        response = HttpResponse()  # Create an empty HttpResponse
+        response = HttpResponseRedirect(
+            redirect_url
+        )  # Use HttpResponseRedirect for redirection
 
         response.set_cookie(
             "jwt_access_token",
@@ -623,10 +626,6 @@ class KakaoCallback(APIView):
             secure=False,
             samesite="Lax",
         )
-
-        # Redirect to the frontend URL
-        response["Location"] = redirect_url
-        response.status_code = 302  # HTTP status code for redirection
 
         return response
 
@@ -757,13 +756,15 @@ class GoogleCallback(APIView):
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        # Redirect URL with query parameters
+        # 리다이렉션 URL 생성
         redirect_url = (
             f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
         )
 
         # Create a response with cookies
-        response = HttpResponse()  # Create an empty HttpResponse
+        response = HttpResponseRedirect(
+            redirect_url
+        )  # Use HttpResponseRedirect for redirection
 
         response.set_cookie(
             "jwt_access_token",
@@ -781,10 +782,6 @@ class GoogleCallback(APIView):
             secure=False,
             samesite="Lax",
         )
-
-        # Redirect to the frontend URL
-        response["Location"] = redirect_url
-        response.status_code = 302  # HTTP status code for redirection
 
         return response
 
@@ -913,13 +910,15 @@ class NaverCallback(APIView):
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        # Redirect URL with query parameters
+        # 리다이렉션 URL 생성
         redirect_url = (
             f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
         )
 
         # Create a response with cookies
-        response = HttpResponse()  # Create an empty HttpResponse
+        response = HttpResponseRedirect(
+            redirect_url
+        )  # Use HttpResponseRedirect for redirection
 
         response.set_cookie(
             "jwt_access_token",
@@ -937,10 +936,6 @@ class NaverCallback(APIView):
             secure=False,
             samesite="Lax",
         )
-
-        # Redirect to the frontend URL
-        response["Location"] = redirect_url
-        response.status_code = 302  # HTTP status code for redirection
 
         return response
 
@@ -1023,3 +1018,19 @@ class CheckBusinessStatusView(View):
             )
         except json.JSONDecodeError:
             return JsonResponse({"message": "잘못된 요청 데이터입니다."}, status=400)
+
+
+# 통합로그아웃
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
+    def post(self, request):
+        if request.user.social_provider == "kakao":
+            return KakaoLogout().get(request)
+        elif request.user.social_provider == "google":
+            return GoogleLogout().get(request)
+        elif request.user.social_provider == "naver":
+            return NaverLogout().get(request)
+        else:
+            # 일반 로그아웃
+            return UserLogoutView().post(request)

@@ -68,8 +68,9 @@ DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 # NCP Object Storage 관련 설정
-AWS_ACCESS_KEY_ID = "YOUR_ACCESS_KEY"  # NCP Access Key
-AWS_SECRET_ACCESS_KEY = "YOUR_SECRET_KEY"  # NCP Secret Key
+AWS_ACCESS_KEY_ID = os.getenv("NCP_Access_Key")  # NCP Access Key
+AWS_SECRET_ACCESS_KEY = os.getenv("NCP_Secret_Key")  # NCP Secret Key
+print(AWS_ACCESS_KEY_ID)
 AWS_STORAGE_BUCKET_NAME = "allthe"  # NCP 버킷 이름
 
 # 커스텀 도메인 설정 (optional)
