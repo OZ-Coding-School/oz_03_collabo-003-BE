@@ -591,7 +591,6 @@ class KakaoCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
-                "nickname": username,
                 # "role":"client"
             },
         )
@@ -748,7 +747,6 @@ class GoogleCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
-                "nickname": username,
                 # "role": "analyst",
             },
         )
@@ -904,7 +902,6 @@ class NaverCallback(APIView):
                 "username": username,
                 "social_provider": provider,
                 "is_active": True,
-                "nickname": username,
             },
         )
 

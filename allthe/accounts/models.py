@@ -28,7 +28,6 @@ class User(AbstractUser):
         null=True,
     )
     username = models.CharField(max_length=150, blank=True, null=True, unique=True)
-    nickname = models.CharField(max_length=150, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     role = models.CharField(
@@ -47,7 +46,7 @@ class User(AbstractUser):
     points = models.IntegerField(default=0)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["nickname"]
+    REQUIRED_FIELDS = ["username"]
 
     objects = CustomUserManager()
 
@@ -68,9 +67,6 @@ class User(AbstractUser):
         constraints = [
             models.UniqueConstraint(fields=["email"], name="unique_email"),
             models.UniqueConstraint(fields=["username"], name="unique_username"),
-            models.UniqueConstraint(
-                fields=["nickname"], name="unique_nickname"  # 닉네임 중복 방지
-            ),
         ]
 
 
