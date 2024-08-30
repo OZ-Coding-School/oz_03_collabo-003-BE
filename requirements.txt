@@ -28,3 +28,4 @@ Pillow
 django-cors-headers
 boto3 
 django-storages
+setuptools
