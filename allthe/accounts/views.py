@@ -601,31 +601,32 @@ class KakaoCallback(APIView):
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
         )
 
-        # 쿠키 설정
-        response = HttpResponseRedirect(redirect_url)
+        # Create a response with cookies
+        response = HttpResponseRedirect(
+            redirect_url
+        )  # Use HttpResponseRedirect for redirection
+
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,  # 쿠키 만료 시간 (초 단위)
-            httponly=True,  # 자바스크립트에서 쿠키 접근을 막습니다
-            secure=False,  # HTTPS에서만 쿠키 전송 (개발 환경에서는 False)
-            samesite="Lax",  # CSRF 보호를 위한 설정
+            max_age=3600,  # 1 hour
+            httponly=True,
+            secure=False,
+            samesite="Lax",
         )
         response.set_cookie(
             "kakao_access_token",
             access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
         )
 
-        # 리다이렉션 URL로 응답
         return response
 
 
@@ -757,29 +758,31 @@ class GoogleCallback(APIView):
 
         # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
         )
 
-        # 쿠키 설정
-        response = HttpResponseRedirect(redirect_url)
+        # Create a response with cookies
+        response = HttpResponseRedirect(
+            redirect_url
+        )  # Use HttpResponseRedirect for redirection
+
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,  # 쿠키 만료 시간 (초 단위)
-            httponly=True,  # 자바스크립트에서 쿠키 접근을 막습니다
-            secure=False,  # HTTPS에서만 쿠키 전송 (개발 환경에서는 False)
-            samesite="Lax",  # CSRF 보호를 위한 설정
+            max_age=3600,  # 1 hour
+            httponly=True,
+            secure=False,
+            samesite="Lax",
         )
         response.set_cookie(
             "google_access_token",
             access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
         )
 
-        # 리다이렉션 URL로 응답
         return response
 
 
@@ -909,29 +912,31 @@ class NaverCallback(APIView):
 
         # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
         )
 
-        # 쿠키 설정
-        response = HttpResponseRedirect(redirect_url)
+        # Create a response with cookies
+        response = HttpResponseRedirect(
+            redirect_url
+        )  # Use HttpResponseRedirect for redirection
+
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,  # 쿠키 만료 시간 (초 단위)
-            httponly=True,  # 자바스크립트에서 쿠키 접근을 막습니다
-            secure=False,  # HTTPS에서만 쿠키 전송 (개발 환경에서는 False)
-            samesite="Lax",  # CSRF 보호를 위한 설정
+            max_age=3600,  # 1 hour
+            httponly=True,
+            secure=False,
+            samesite="Lax",
         )
         response.set_cookie(
             "naver_access_token",
             access_token,
-            max_age=3600,
+            max_age=3600,  # 1 hour
             httponly=True,
             secure=False,
             samesite="Lax",
         )
 
-        # 리다이렉션 URL로 응답
         return response
 
 
@@ -1013,3 +1018,19 @@ class CheckBusinessStatusView(View):
             )
         except json.JSONDecodeError:
             return JsonResponse({"message": "잘못된 요청 데이터입니다."}, status=400)
+
+
+# 통합로그아웃
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
+    def post(self, request):
+        if request.user.social_provider == "kakao":
+            return KakaoLogout().get(request)
+        elif request.user.social_provider == "google":
+            return GoogleLogout().get(request)
+        elif request.user.social_provider == "naver":
+            return NaverLogout().get(request)
+        else:
+            # 일반 로그아웃
+            return UserLogoutView().post(request)
