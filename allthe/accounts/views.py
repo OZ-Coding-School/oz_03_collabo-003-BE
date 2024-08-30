@@ -40,14 +40,14 @@ load_dotenv()
 
 KAKAO_APP_KEY = os.getenv("KAKAO_APP_KEY")
 KAKAO_SECRET = os.getenv("KAKAO_SECRET")
-KAKAO_URI=os.getenv("KAKAO_URI")
+KAKAO_URI = os.getenv("KAKAO_URI")
 GOOGLE_APP_KEY = os.getenv("GOOGLE_APP_KEY")
 GOOGLE_SECRET = os.getenv("GOOGLE_SECRET")
-GOOGLE_URI=os.getenv("GOOGLE_URI")
+GOOGLE_URI = os.getenv("GOOGLE_URI")
 NAVER_APP_KEY = os.getenv("NAVER_APP_KEY")
 NAVER_SECRET = os.getenv("NAVER_SECRET")
-NAVER_URI=os.getenv("NAVER_URI")
-FRONT_DOMAIN=os.getenv("FRONT_DOMAIN")
+NAVER_URI = os.getenv("NAVER_URI")
+FRONT_DOMAIN = os.getenv("FRONT_DOMAIN")
 
 
 class UsernameCheckView(APIView):
@@ -600,7 +600,9 @@ class KakaoCallback(APIView):
         jwt_access_token = str(refresh.access_token)
 
         # Redirect URL with query parameters
-        redirect_url = f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        redirect_url = (
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        )
 
         # Create a response with cookies
         response = HttpResponse()  # Create an empty HttpResponse
@@ -756,7 +758,9 @@ class GoogleCallback(APIView):
         jwt_access_token = str(refresh.access_token)
 
         # Redirect URL with query parameters
-        redirect_url = f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        redirect_url = (
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        )
 
         # Create a response with cookies
         response = HttpResponse()  # Create an empty HttpResponse
@@ -910,7 +914,9 @@ class NaverCallback(APIView):
         jwt_access_token = str(refresh.access_token)
 
         # Redirect URL with query parameters
-        redirect_url = f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        redirect_url = (
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+        )
 
         # Create a response with cookies
         response = HttpResponse()  # Create an empty HttpResponse
