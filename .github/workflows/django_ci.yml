@@ -59,7 +59,11 @@ jobs:
           echo "Django server is not running"
           exit 1
         fi
-    
+    # .env 파일 삭제
+    - name: Remove .env file
+      run: rm .env
+
+      
     # Docker Buildx 설정
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
