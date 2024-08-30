@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -596,38 +597,35 @@ class KakaoCallback(APIView):
             },
         )
 
+        # JWT 토큰 생성
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        # Redirect URL with query parameters
+        # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
         )
 
-        # Create a response with cookies
-        response = HttpResponse()  # Create an empty HttpResponse
-
+        # 쿠키 설정
+        response = HttpResponseRedirect(redirect_url)
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,  # 1 hour
-            httponly=True,
-            secure=False,
-            samesite="Lax",
+            max_age=3600,  # 쿠키 만료 시간 (초 단위)
+            httponly=True,  # 자바스크립트에서 쿠키 접근을 막습니다
+            secure=False,  # HTTPS에서만 쿠키 전송 (개발 환경에서는 False)
+            samesite="Lax",  # CSRF 보호를 위한 설정
         )
         response.set_cookie(
             "kakao_access_token",
             access_token,
-            max_age=3600,  # 1 hour
+            max_age=3600,
             httponly=True,
             secure=False,
             samesite="Lax",
         )
 
-        # Redirect to the frontend URL
-        response["Location"] = redirect_url
-        response.status_code = 302  # HTTP status code for redirection
-
+        # 리다이렉션 URL로 응답
         return response
 
 
@@ -757,35 +755,31 @@ class GoogleCallback(APIView):
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        # Redirect URL with query parameters
+        # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
         )
 
-        # Create a response with cookies
-        response = HttpResponse()  # Create an empty HttpResponse
-
+        # 쿠키 설정
+        response = HttpResponseRedirect(redirect_url)
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,  # 1 hour
-            httponly=True,
-            secure=False,
-            samesite="Lax",
+            max_age=3600,  # 쿠키 만료 시간 (초 단위)
+            httponly=True,  # 자바스크립트에서 쿠키 접근을 막습니다
+            secure=False,  # HTTPS에서만 쿠키 전송 (개발 환경에서는 False)
+            samesite="Lax",  # CSRF 보호를 위한 설정
         )
         response.set_cookie(
             "google_access_token",
             access_token,
-            max_age=3600,  # 1 hour
+            max_age=3600,
             httponly=True,
             secure=False,
             samesite="Lax",
         )
 
-        # Redirect to the frontend URL
-        response["Location"] = redirect_url
-        response.status_code = 302  # HTTP status code for redirection
-
+        # 리다이렉션 URL로 응답
         return response
 
 
@@ -913,35 +907,31 @@ class NaverCallback(APIView):
         refresh = RefreshToken.for_user(user)
         jwt_access_token = str(refresh.access_token)
 
-        # Redirect URL with query parameters
+        # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
         )
 
-        # Create a response with cookies
-        response = HttpResponse()  # Create an empty HttpResponse
-
+        # 쿠키 설정
+        response = HttpResponseRedirect(redirect_url)
         response.set_cookie(
             "jwt_access_token",
             jwt_access_token,
-            max_age=3600,  # 1 hour
-            httponly=True,
-            secure=False,
-            samesite="Lax",
+            max_age=3600,  # 쿠키 만료 시간 (초 단위)
+            httponly=True,  # 자바스크립트에서 쿠키 접근을 막습니다
+            secure=False,  # HTTPS에서만 쿠키 전송 (개발 환경에서는 False)
+            samesite="Lax",  # CSRF 보호를 위한 설정
         )
         response.set_cookie(
             "naver_access_token",
             access_token,
-            max_age=3600,  # 1 hour
+            max_age=3600,
             httponly=True,
             secure=False,
             samesite="Lax",
         )
 
-        # Redirect to the frontend URL
-        response["Location"] = redirect_url
-        response.status_code = 302  # HTTP status code for redirection
-
+        # 리다이렉션 URL로 응답
         return response
 
 
