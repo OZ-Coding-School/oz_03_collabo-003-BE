@@ -181,6 +181,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # 실제 요청이 발생하는 클라이언트 도메인 추가
     "http://127.0.0.1:3000",
     "http://localhost:5173",
+    "https://localhost:3000",  # 실제 요청이 발생하는 클라이언트 도메인 추가
+    "https://127.0.0.1:3000",
+    "https://localhost:5173",
 ]
 CORS_ALLOW_METHODS = [
     "DELETE",
