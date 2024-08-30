@@ -58,6 +58,7 @@ jobs:
     # Django 서버 실행 및 테스트
     - name: Run Django server and test
       run: |
+        cd allthe
         python manage.py migrate
         python manage.py runserver &
         sleep 5
