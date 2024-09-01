@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "*" ]  # 모든 브랜치에 대해 push 이벤트 감지
   pull_request:
+    types: [closed]
     branches: [ "main", "develop" ]
 
 env:
