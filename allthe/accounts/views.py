@@ -69,6 +69,23 @@ class UsernameCheckView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class EmailCheckView(APIView):
+    def post(self, request):
+        serializer = EmailSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            exists = User.objects.filter(email=email).exists()
+            if exists:
+                return Response(
+                    {"message": "이미 존재하는 이메일입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            else:
+                return Response(
+                    {"message": "사용 가능한 이메일입니다."}, status=status.HTTP_200_OK
+                )
+
+
 class SendVerificationCodeView(APIView):
     """
     이메일로 인증 코드를 전송하는 API
@@ -233,7 +250,7 @@ class UserLoginView(APIView):
 
         response = Response(
             {
-                "id": user.id,
+                "userId": user.id,
                 "email": user.email,
                 "username": user.username,
             }

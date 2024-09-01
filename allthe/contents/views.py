@@ -62,21 +62,21 @@ class UploadContent(APIView):
 
         # 콘텐츠의 기본 정보 저장
         content_serializer = ContentsSerializer(data=data, partial=True)
-        if content_serializer.is_valid():
-            # 콘텐츠 인스턴스 저장
-            content = content_serializer.save()
+        if not content_serializer.is_valid():
+            return Response(
+                content_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        # 콘텐츠 인스턴스 저장
+        content = content_serializer.save()
 
-            # 이미지 처리
-            image_files = request.FILES.getlist("images")
-            for image_file in image_files:
-                # Image 모델에 이미지 저장
-                image = Image.objects.create(file=image_file)
-                # Content 모델과 연결
-                content.images.add(image)
-
-            return Response(content_serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(content_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 이미지 처리
+        image_files = request.FILES.getlist("images")
+        for image_file in image_files:
+            # Image 모델에 이미지 저장
+            image = Image.objects.create(file=image_file)
+            # Content 모델과 연결
+            content.images.add(image)
+        return Response(content_serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
         responses={
@@ -162,22 +162,24 @@ class UpdateContent(APIView):
 
         # 콘텐츠의 기본 정보 수정
         content_serializer = ContentsSerializer(content, data=data, partial=True)
-        if content_serializer.is_valid():
+        if not content_serializer.is_valid():
+            return Response(
+                content_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
             # 콘텐츠 인스턴스 저장
-            updated_content = content_serializer.save()
+        updated_content = content_serializer.save()
 
-            # 이미지 처리
-            if "images" in request.FILES:
-                image_files = request.FILES.getlist("images")
-                for image_file in image_files:
-                    # Image 모델에 이미지 저장
-                    image = Image.objects.create(file=image_file)
-                    # Content 모델과 연결
-                    updated_content.images.add(image)
+        # 이미지 처리
+        if "images" in request.FILES:
+            image_files = request.FILES.getlist("images")
+            for image_file in image_files:
+                # Image 모델에 이미지 저장
+                image = Image.objects.create(file=image_file)
+                # Content 모델과 연결
+                updated_content.images.add(image)
 
-            return Response(content_serializer.data, status=status.HTTP_200_OK)
-
-        return Response(content_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(content_serializer.data, status=status.HTTP_200_OK)
 
 
 # 콘텐츠 삭제(DELETE) API

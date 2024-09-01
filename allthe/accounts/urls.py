@@ -5,6 +5,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from .views import CheckBusinessStatusView
+from .views import EmailCheckView
 from .views import FinalSignupView
 from .views import GoogleCallback
 from .views import GoogleLogin
@@ -59,6 +60,7 @@ urlpatterns = [
         SendVerificationCodeView.as_view(),
         name="send-verification-code",
     ),
+    path("check-email/", EmailCheckView.as_view(), name="check-email"),
     path("verify-code/", VerifyCodeView.as_view(), name="verify_code"),
     path("me/role/", UpdateRoleView.as_view(), name="update_role"),
     # 소셜 로그인 관련 API
