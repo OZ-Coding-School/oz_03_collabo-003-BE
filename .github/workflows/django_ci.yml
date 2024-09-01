@@ -95,3 +95,11 @@ jobs:
         context: .
         push: true
         tags: ${{ steps.tag.outputs.tags }}
+
+    - name: Print success message
+      run: |
+        if [[ ${{ github.base_ref }} == 'main' ]]; then
+          echo "Successfully pushed Docker image with tags: latest, stable"
+        elif [[ ${{ github.base_ref }} == 'develop' ]]; then
+          echo "Successfully pushed Docker image with tag: develop"
+        fi
