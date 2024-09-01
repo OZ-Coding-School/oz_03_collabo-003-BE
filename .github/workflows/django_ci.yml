@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "develop" ]  # develop 브랜치로의 PR에 대해 빌드 및 푸시
 
+
+env:
+  DOCKER_IMAGE: joonhoseong/allthe  # Docker Hub 레포지토리 이름으로 변경해주세요
+
 jobs:
   test:
     runs-on: ubuntu-latest
