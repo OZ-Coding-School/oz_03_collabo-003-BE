@@ -2,13 +2,12 @@ name: Django CI
 
 on:
   push:
-    branches: [ "*" ]  # 모든 브랜치에 대해 테스트 실행
+    branches: [ "*" ]  # 모든 브랜치에 대해 push 이벤트 감지
   pull_request:
-    branches: [ "develop" ]  # develop 브랜치로의 PR에 대해 빌드 및 푸시
-
+    branches: [ "main", "develop" ]
 
 env:
-  DOCKER_IMAGE: joonhoseong/allthe  # Docker Hub 레포지토리 이름으로 변경해주세요
+  DOCKER_IMAGE: joonhoseong/allthe  # Docker Hub 레포지토리 이름
 
 jobs:
   test:
@@ -66,7 +65,7 @@ jobs:
 
   build-and-push:
     needs: test
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop'
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && (github.base_ref == 'main' || github.base_ref == 'develop')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -79,17 +78,19 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    
+    - name: Generate image tags
+      id: tag
+      run: |
+        if [[ ${{ github.base_ref }} == 'main' ]]; then
+          echo "::set-output name=tags::${{ env.DOCKER_IMAGE }}:latest,${{ env.DOCKER_IMAGE }}:stable"
+        elif [[ ${{ github.base_ref }} == 'develop' ]]; then
+          echo "::set-output name=tags::${{ env.DOCKER_IMAGE }}:develop"
+        fi
     
     - name: Build and push
       uses: docker/build-push-action@v2
       with:
         context: .
         push: true
-        tags: |
-          ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}
-          ${{ secrets.DOCKER_IMAGE }}:latest
-      env:
-        DOCKER_BUILDKIT: 1
-        BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+        tags: ${{ steps.tag.outputs.tags }}
