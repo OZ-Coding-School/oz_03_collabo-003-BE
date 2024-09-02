@@ -269,14 +269,14 @@ class UserLoginView(APIView):
             value=access_token,
             httponly=True,
             expires=timezone.now() + datetime.timedelta(days=7),
-            domain=".localhost",
+            domain="allthe.store",
         )
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
             expires=timezone.now() + datetime.timedelta(days=30),
-            domain=".localhost",
+            domain="allthe.store",
         )
 
         return response
@@ -639,7 +639,7 @@ class KakaoCallback(APIView):
             jwt_access_token,
             max_age=3600,  # 1 hour
             httponly=True,
-            secure=False,
+            secure=True,
             samesite="Lax",
         )
         response.set_cookie(
@@ -647,7 +647,7 @@ class KakaoCallback(APIView):
             access_token,
             max_age=3600,  # 1 hour
             httponly=True,
-            secure=False,
+            secure=True,
             samesite="Lax",
         )
 
@@ -795,7 +795,7 @@ class GoogleCallback(APIView):
             jwt_access_token,
             max_age=3600,  # 1 hour
             httponly=True,
-            secure=False,
+            secure=True,
             samesite="Lax",
         )
         response.set_cookie(
@@ -803,7 +803,7 @@ class GoogleCallback(APIView):
             access_token,
             max_age=3600,  # 1 hour
             httponly=True,
-            secure=False,
+            secure=True,
             samesite="Lax",
         )
 
@@ -949,7 +949,7 @@ class NaverCallback(APIView):
             jwt_access_token,
             max_age=3600,  # 1 hour
             httponly=True,
-            secure=False,
+            secure=True,
             samesite="Lax",
         )
         response.set_cookie(
@@ -957,7 +957,7 @@ class NaverCallback(APIView):
             access_token,
             max_age=3600,  # 1 hour
             httponly=True,
-            secure=False,
+            secure=True,
             samesite="Lax",
         )
 
