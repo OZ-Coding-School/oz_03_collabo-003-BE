@@ -84,9 +84,9 @@ jobs:
       id: tag
       run: |
         if [[ ${{ github.base_ref }} == 'main' ]]; then
-          echo "::set-output name=tags::${{ env.DOCKER_IMAGE }}:latest,${{ env.DOCKER_IMAGE }}:stable"
+          echo "tags=${{ env.DOCKER_IMAGE }}:latest,${{ env.DOCKER_IMAGE }}:stable" >> $GITHUB_OUTPUT
         elif [[ ${{ github.base_ref }} == 'develop' ]]; then
-          echo "::set-output name=tags::${{ env.DOCKER_IMAGE }}:develop"
+          echo "tags=${{ env.DOCKER_IMAGE }}:develop" >> $GITHUB_OUTPUT
         fi
     
     - name: Build and push
