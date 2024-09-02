@@ -108,10 +108,17 @@ jobs:
         username: ${{ secrets.NCP_USERNAME }}
         key: ${{ secrets.NCP_SSH_KEY }}
         script: |
-          # Determine the image tag
+          # Move to the project directory
+          cd oz_03_collabo-003-BE
+
+          # Determine the branch and pull the latest changes
           if [[ "${{ github.base_ref }}" == "main" ]]; then
+            git checkout main
+            git pull origin main
             IMAGE_TAG=latest
           elif [[ "${{ github.base_ref }}" == "develop" ]]; then
+            git checkout develop
+            git pull origin develop
             IMAGE_TAG=develop
           fi
 
@@ -147,7 +154,7 @@ jobs:
               ports:
                 - "8000:8000"
               env_file:
-                - .env # Use .env file for environment variables
+                - .env
           EOF
 
           # Pull the latest image
