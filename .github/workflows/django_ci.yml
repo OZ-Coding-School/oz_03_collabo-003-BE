@@ -150,6 +150,8 @@ jobs:
           version: '3'
           services:
             web:
+              volumes:
+                - ./allthe:/app
               image: ${{ env.DOCKER_IMAGE }}:${IMAGE_TAG}
               ports:
                 - "8000:8000"
