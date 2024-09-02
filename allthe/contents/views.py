@@ -1,3 +1,6 @@
+import os
+
+import boto3
 from accounts.models import User
 from django.db import models
 from drf_yasg import openapi
@@ -9,87 +12,52 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Content
+from .models import ContentImage
 from .models import Image
 from .models import Like
+from .models import QnA
 from .models import Review
+from .serializers import ContentSerializer
 from .serializers import ContentsSerializer
 from .serializers import LikeSerializer
+from .serializers import QnASerializer
 from .serializers import ReviewSerializer
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url="https://kr.object.ncloudstorage.com",
+    aws_access_key_id=os.getenv("NCP_Access_Key"),
+    aws_secret_access_key=os.getenv("NCP_Secret_Key"),
+)
 
 
 # 콘텐츠 업로드(post), 모든 콘텐츠 list(get)
 class UploadContent(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "title": openapi.Schema(type=openapi.TYPE_STRING),
-                "content": openapi.Schema(type=openapi.TYPE_STRING),
-                "category": openapi.Schema(type=openapi.TYPE_STRING),
-                "site_url": openapi.Schema(type=openapi.TYPE_STRING),
-                "site_description": openapi.Schema(
-                    type=openapi.TYPE_STRING, default=""
-                ),
-                "is_analyzed": openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
-                "images": openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Schema(type=openapi.TYPE_FILE),
-                    description="Upload multiple images",
-                    default=[],
-                ),
-            },
-        ),
-        responses={
-            status.HTTP_201_CREATED: ContentsSerializer,
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-        },
-        operation_summary="Upload new content with images",
-        operation_description="This endpoint allows users to upload new content with multiple images. Only non-analyst users can upload content.",
-    )
     def post(self, request):
-        # 요청한 사용자가 의뢰자인지 확인
-        if request.user.role == "analyst":
-            return Response(
-                {"error": "분석가는 콘텐츠를 업로드할 수 없습니다."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        data = request.data.copy()
+        user = request.user
+        data["user"] = user.id
 
-        # 요청 데이터에서 콘텐츠 정보를 가져옴
-        data = request.data.copy()  # request.data는 ImmutableMultiValueDict이므로 복사
-        data["user"] = request.user.id  # 사용자 ID를 추가
+        serializer = ContentSerializer(data=data, context={"request": request})
+        if serializer.is_valid():
+            content = serializer.save()
 
-        # 콘텐츠의 기본 정보 저장
-        content_serializer = ContentsSerializer(data=data, partial=True)
-        if not content_serializer.is_valid():
-            return Response(
-                content_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
-        # 콘텐츠 인스턴스 저장
-        content = content_serializer.save()
+            # 요청 파일에서 이미지를 추출하여 ContentImage 모델에 저장
+            images = request.FILES.getlist("images")
+            for image in images:
+                ContentImage.objects.create(content=content, file=image)
 
-        # 이미지 처리
-        image_files = request.FILES.getlist("images")
-        for image_file in image_files:
-            # Image 모델에 이미지 저장
-            image = Image.objects.create(file=image_file)
-            # Content 모델과 연결
-            content.images.add(image)
-        return Response(content_serializer.data, status=status.HTTP_201_CREATED)
+            # Content 객체를 다시 직렬화하여 반환
+            content_serializer = ContentSerializer(content)
+            return Response(content_serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(
-        responses={
-            status.HTTP_200_OK: ContentsSerializer(many=True),
-            status.HTTP_401_UNAUTHORIZED: openapi.Response("Unauthorized"),
-        },
-        operation_summary="List all content",
-        operation_description="Retrieve a list of all content objects. Only authenticated users can access this endpoint.",
-    )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def get(self, request):
-        # 모든 콘텐츠 객체 가져오기
         contents = Content.objects.all()
-        serializer = ContentsSerializer(contents, many=True)
+        serializer = ContentSerializer(contents, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -404,3 +372,56 @@ class LikedContentList(APIView):
         liked_items = Like.objects.filter(user=request.user)
         serializer = LikeSerializer(liked_items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# QnA 목록을 조회
+class QnAList(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
+    def get(self, request, content_id):
+        # URL에서 콘텐츠 ID 가져오기
+        queryset = QnA.objects.filter(
+            content_id=content_id, parent__isnull=True
+        )  # 해당 콘텐츠의 질문만 필터링
+        serializer = QnASerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# QnA 생성
+class QnACreate(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
+    def post(self, request, format=None):
+        data = request.data.copy()  # 요청 데이터 복사
+        user = request.user  # JWT 토큰으로부터 인증된 사용자 가져오기
+
+        # 답변 생성 시 콘텐츠의 작성자를 확인
+        parent_id = data.get("parent")
+        if parent_id is None:
+            # 질문인 경우
+            data["user"] = user.id
+        else:
+            # 답변인 경우
+            parent = QnA.objects.filter(id=parent_id).first()
+            if parent is None:
+                return Response(
+                    {"error": "Parent question not found."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # 콘텐츠 작성자를 확인
+            content = parent.content
+            if content.user != user:
+                return Response(
+                    {"error": "You are not authorized to answer this question."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            data["user"] = user.id
+            data["parent"] = parent_id
+
+        serializer = QnASerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

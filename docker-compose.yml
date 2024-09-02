@@ -8,5 +8,9 @@ services:
       - ./allthe:/app  # 현재 디렉토리와 컨테이너 내부 /app 디렉토리를 연결
     ports:
       - "8000:8000"  # 호스트 8000 포트와 컨테이너 8000 포트를 연결
+    environment:
+      - NCP_Access_Key=${NCP_Access_Key}  # AWS 액세스 키를 환경 변수로 전달합니다.
+      - NCP_Secret_Key=${NCP_Secret_Key}  # AWS 시크릿 액세스 키를 환경 변수로 전달합니다.
+      - NCP_BUCKET_NAME=${NCP_BUCKET_NAME}
     env_file:
       - .env  # 환경 변수 파일 (.env 파일 필요 시 추가)
