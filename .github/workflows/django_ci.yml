@@ -115,6 +115,29 @@ jobs:
             IMAGE_TAG=develop
           fi
 
+          # Create or update .env file
+          cat << EOF > .env
+          DB_ENGINE=${{ secrets.DB_ENGINE }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          KAKAO_APP_KEY=${{ secrets.KAKAO_APP_KEY }}
+          KAKAO_SECRET=${{ secrets.KAKAO_SECRET }}
+          KAKAO_URI=${{ secrets.KAKAO_URI }}
+          GOOGLE_APP_KEY=${{ secrets.GOOGLE_APP_KEY }}
+          GOOGLE_SECRET=${{ secrets.GOOGLE_SECRET }}
+          GOOGLE_URI=${{ secrets.GOOGLE_URI }}
+          NAVER_APP_KEY=${{ secrets.NAVER_APP_KEY }}
+          NAVER_SECRET=${{ secrets.NAVER_SECRET }}
+          NAVER_URI=${{ secrets.NAVER_URI }}
+          FRONT_DOMAIN=${{ secrets.FRONT_DOMAIN }}
+          PORTONE_APP_KEY=${{ secrets.PORTONE_APP_KEY }}
+          PORTONE_SECRET=${{ secrets.PORTONE_SECRET }}
+          PORTONE_CHANNEL_KEY=${{ secrets.PORTONE_CHANNEL_KEY }}
+          EOF
+
           # Create or update docker-compose.yml
           cat << EOF > docker-compose.yml
           version: '3'
@@ -123,26 +146,8 @@ jobs:
               image: ${{ env.DOCKER_IMAGE }}:${IMAGE_TAG}
               ports:
                 - "8000:8000"
-              environment:
-                - DB_ENGINE=${{ secrets.DB_ENGINE }}
-                - DB_NAME=${{ secrets.DB_NAME }}
-                - DB_USER=${{ secrets.DB_USER }}
-                - DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-                - DB_HOST=${{ secrets.DB_HOST }}
-                - DB_PORT=${{ secrets.DB_PORT }}
-                - KAKAO_APP_KEY=${{ secrets.KAKAO_APP_KEY }}
-                - KAKAO_SECRET=${{ secrets.KAKAO_SECRET }}
-                - KAKAO_URI=${{ secrets.KAKAO_URI }}
-                - GOOGLE_APP_KEY=${{ secrets.GOOGLE_APP_KEY }}
-                - GOOGLE_SECRET=${{ secrets.GOOGLE_SECRET }}
-                - GOOGLE_URI=${{ secrets.GOOGLE_URI }}
-                - NAVER_APP_KEY=${{ secrets.NAVER_APP_KEY }}
-                - NAVER_SECRET=${{ secrets.NAVER_SECRET }}
-                - NAVER_URI=${{ secrets.NAVER_URI }}
-                - FRONT_DOMAIN=${{ secrets.FRONT_DOMAIN }}
-                - PORTONE_APP_KEY=${{ secrets.PORTONE_APP_KEY }}
-                - PORTONE_SECRET=${{ secrets.PORTONE_SECRET }}
-                - PORTONE_CHANNEL_KEY=${{ secrets.PORTONE_CHANNEL_KEY }}
+              env_file:
+                - .env # Use .env file for environment variables
           EOF
 
           # Pull the latest image
