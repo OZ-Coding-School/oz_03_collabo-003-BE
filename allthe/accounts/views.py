@@ -54,9 +54,11 @@ FRONT_DOMAIN = os.getenv("FRONT_DOMAIN")
 class UsernameCheckView(APIView):
     def post(self, request):
         serializer = UsernameCheckSerializer(data=request.data)
+
         if serializer.is_valid():
             username = serializer.validated_data["username"]
             exists = User.objects.filter(username=username).exists()
+
             if exists:
                 return Response(
                     {"message": "이미 존재하는 닉네임입니다."},
@@ -64,9 +66,14 @@ class UsernameCheckView(APIView):
                 )
             else:
                 return Response(
-                    {"message": "사용 가능한 닉네임입니다."}, status=status.HTTP_200_OK
+                    {"message": "사용 가능한 닉네임입니다."},
+                    status=status.HTTP_200_OK,
                 )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class EmailCheckView(APIView):
