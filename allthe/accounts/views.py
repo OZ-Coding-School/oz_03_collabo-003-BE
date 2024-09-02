@@ -409,7 +409,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 프론트엔드의 패스워드 리셋 URL 설정
-        reset_url = f"http://localhost:5173/password-reset?token={token}"
+        reset_url = f"https://localhost:5173/password-reset?token={token}"
 
         # 이메일 발송
         send_mail(
