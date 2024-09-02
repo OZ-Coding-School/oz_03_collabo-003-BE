@@ -31,7 +31,14 @@ SECRET_KEY = "django-insecure-&!0y$4(o$ynya*^2zft%_el3mf)_-8489w*^s*tb%9*_u)w!jo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "223.130.128.216", "api.allthe.live", "api.allthe.shop", "api.allthe.store"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "223.130.128.216",
+    "api.allthe.live",
+    "api.allthe.shop",
+    "api.allthe.store",
+]
 
 AUTH_USER_MODEL = "accounts.User"
 # Application definition
@@ -207,7 +214,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://localhost:3000",  # 실제 요청이 발생하는 클라이언트 도메인 추가
     "https://127.0.0.1:3000",
     "https://localhost:5173",
-    "https://allthe.store", #추가
+    "https://allthe.store",  # 추가
 ]
 CORS_ALLOW_METHODS = [
     "DELETE",
