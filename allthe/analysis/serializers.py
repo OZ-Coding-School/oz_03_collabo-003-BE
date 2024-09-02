@@ -35,7 +35,6 @@ class AnalysisRequestSerializerList(serializers.ModelSerializer):
 
 # 분석 요청 post. list반환
 class AnalysisRequestSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = AnalysisRequest
         fields = "__all__"

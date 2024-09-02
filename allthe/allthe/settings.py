@@ -70,28 +70,6 @@ DEFAULT_APPS = [
 
 INSTALLED_APPS = DEFAULT_APPS + CUSTOM_APPS
 
-# NCP Object Storage와의 연결을 위한 설정
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-
-# NCP Object Storage 관련 설정
-AWS_ACCESS_KEY_ID = os.getenv("NCP_Access_Key")  # NCP Access Key
-AWS_SECRET_ACCESS_KEY = os.getenv("NCP_Secret_Key")  # NCP Secret Key
-print(AWS_ACCESS_KEY_ID)
-AWS_STORAGE_BUCKET_NAME = "allthe"  # NCP 버킷 이름
-
-# 커스텀 도메인 설정 (optional)
-AWS_S3_CUSTOM_DOMAIN = f"kr.object.ncloudstorage.com/{AWS_STORAGE_BUCKET_NAME}"
-
-# 미디어 파일과 정적 파일의 URL 설정
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
-STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-
-# 파일 업로드 경로 설정
-MEDIA_ROOT = ""
-STATIC_ROOT = ""
-
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",

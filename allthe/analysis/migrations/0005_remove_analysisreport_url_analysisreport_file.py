@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("analysis", "0004_rename_photo_analyst_analyst_image_and_more"),
     ]
