@@ -29,12 +29,13 @@ schema_view = get_schema_view(
         title="ALL THE API 명세서",
         default_version="v1",
         description="ALL THE 프로젝트를 위한 API 명세서 입니다.",
-        terms_of_service="https://allthe.monster",
+        terms_of_service="https://allthe.store",
         contact=openapi.Contact(email="joonho1366@gmail.com"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
+    url="https://api.allthe.store/",
 )
 
 urlpatterns = [
