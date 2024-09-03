@@ -193,6 +193,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://127.0.0.1:3000",
     "https://localhost:5173",
     "https://allthe.store",  # 추가
+    "https://api.allthe.store",
 ]
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -233,3 +234,6 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
 }
+
+
+CSRF_TRUSTED_ORIGINS = ["https://api.allthe.store"]  # Admin 페이지 접속을 위한 추가
