@@ -28,6 +28,7 @@ s3 = boto3.client(
     aws_secret_access_key=os.getenv("NCP_Secret_Key"),
 )
 
+
 # 의뢰요청(post)
 class AnalysisRequest(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
@@ -59,8 +60,11 @@ class AnalysisRequest(APIView):
             serializer.save()  # 요청한 사용자 정보를 의뢰자로 설정
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class AnalysisRequestList(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
@@ -118,8 +122,9 @@ class AnalysisRequestDetail(APIView):
         request_obj = AnalysisRequest.objects.get(pk=pk)
         # 객체가 없으면 404 응답 반환
         if not request_obj:
-            return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
-
+            return Response(
+                {"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         serializer = AnalysisRequestSerializerDetail(request_obj)
         return Response(serializer.data)
@@ -143,9 +148,7 @@ class AcceptAnalysisRequest(APIView):
             ),
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="Forbidden - The user does not have permission to accept the request.",
-                examples={
-                    "application/json": {"error": "분석가만 의뢰를 수락할 수 있습니다."}
-                },
+                examples={"application/json": {"error": "분석가만 의뢰를 수락할 수 있습니다."}},
             ),
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="Not Found - The request does not exist.",
@@ -199,9 +202,7 @@ class AnalysisRequestList(APIView):
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="Forbidden - Only clients can access their own analysis requests.",
                 examples={
-                    "application/json": {
-                        "error": "의뢰자만 자신의 분석 요청 목록을 조회할 수 있습니다."
-                    }
+                    "application/json": {"error": "의뢰자만 자신의 분석 요청 목록을 조회할 수 있습니다."}
                 },
             ),
         },
@@ -227,9 +228,7 @@ class AcceptedAnalystsList(APIView):
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: UserSerializer(many=True),
-            status.HTTP_403_FORBIDDEN: openapi.Response(
-                description="접근 권한이 없는 경우"
-            ),
+            status.HTTP_403_FORBIDDEN: openapi.Response(description="접근 권한이 없는 경우"),
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="의뢰 요청이 존재하지 않는 경우"
             ),
@@ -253,9 +252,7 @@ class AcceptedAnalystsList(APIView):
 
         # 요청한 사용자가 의뢰자일 때만 접근 허용
         if request_obj.client != request.user:
-            return Response(
-                {"error": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
         # 수락한 분석가 목록 조회
         analysts = request_obj.analyst.all()
@@ -284,25 +281,15 @@ class SelectAnalyst(APIView):
             ),
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="접근 권한이 없는 경우",
-                examples={
-                    "application/json": {
-                        "error": "의뢰자만 분석가를 선택할 수 있습니다."
-                    }
-                },
+                examples={"application/json": {"error": "의뢰자만 분석가를 선택할 수 있습니다."}},
             ),
             status.HTTP_400_BAD_REQUEST: openapi.Response(
                 description="잘못된 요청",
-                examples={
-                    "application/json": {
-                        "error": "선택된 분석가의 ID를 제공해야 합니다."
-                    }
-                },
+                examples={"application/json": {"error": "선택된 분석가의 ID를 제공해야 합니다."}},
             ),
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="의뢰 요청이나 분석가가 존재하지 않는 경우",
-                examples={
-                    "application/json": {"error": "선택된 분석가가 존재하지 않습니다."}
-                },
+                examples={"application/json": {"error": "선택된 분석가가 존재하지 않습니다."}},
             ),
         },
         operation_summary="분석가 선택 및 매칭",
@@ -472,7 +459,7 @@ class UploadAnalysisReport(APIView):
                 {"error": "A report already exists for this request."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         report_id = str(uuid.uuid4())
         file_extension = report_file.name.split(".")[-1]
         report_name = f"{report_id}.{file_extension}"
@@ -480,12 +467,12 @@ class UploadAnalysisReport(APIView):
         try:
             s3.upload_fileobj(report_file.file, bucket_name, report_s3_key)
             s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=report_s3_key)
-            report_file =f"https://kr.object.ncloudstorage.com/{bucket_name}/{report_s3_key}"
+            report_file = (
+                f"https://kr.object.ncloudstorage.com/{bucket_name}/{report_s3_key}"
+            )
         except Exception as e:
             print(e)
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-
 
         # 보고서 생성 및 저장
         report = AnalysisReport(
@@ -517,17 +504,11 @@ class CheckAnalysisReport(APIView):
             status.HTTP_200_OK: AnalysisReportSerializer,
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="보고서 또는 요청이 존재하지 않음",
-                examples={
-                    "application/json": {
-                        "error": "분석 보고서 또는 요청을 찾을 수 없습니다."
-                    }
-                },
+                examples={"application/json": {"error": "분석 보고서 또는 요청을 찾을 수 없습니다."}},
             ),
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="권한이 없음",
-                examples={
-                    "application/json": {"error": "이 보고서를 조회할 권한이 없습니다."}
-                },
+                examples={"application/json": {"error": "이 보고서를 조회할 권한이 없습니다."}},
             ),
         },
         operation_summary="분석 보고서 조회",
@@ -603,8 +584,12 @@ class AnalystListCreate(APIView):
             image_s3_key = f"analyst_images/{image_name}"
             try:
                 s3.upload_fileobj(analyst_image.file, bucket_name, image_s3_key)
-                s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=image_s3_key)
-                request["analyst_image"] =f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"            
+                s3.put_object_acl(
+                    ACL="public-read", Bucket=bucket_name, Key=image_s3_key
+                )
+                request[
+                    "analyst_image"
+                ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"
             except Exception as e:
                 print(e)
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -660,11 +645,17 @@ class AnalystDetail(APIView):
                 image_s3_key = f"analyst_images/{image_name}"
                 try:
                     s3.upload_fileobj(analyst_image.file, bucket_name, image_s3_key)
-                    s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=image_s3_key)
-                    request["analyst_image"] =f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"            
+                    s3.put_object_acl(
+                        ACL="public-read", Bucket=bucket_name, Key=image_s3_key
+                    )
+                    request[
+                        "analyst_image"
+                    ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"
                 except Exception as e:
                     print(e)
-                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
             serializer = AnalystSerializer(analyst, data=request.data, partial=True)
             if serializer.is_valid():

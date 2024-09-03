@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("analysis", "0005_remove_analysisreport_url_analysisreport_file"),
     ]

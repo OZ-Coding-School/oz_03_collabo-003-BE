@@ -50,8 +50,12 @@ class UploadContent(APIView):
             thumbnail_s3_key = f"thumbnails/{thumbnail_name}"
             try:
                 s3.upload_fileobj(thumbnail.file, bucket_name, thumbnail_s3_key)
-                s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=thumbnail_s3_key)
-                data["thumbnail"] =f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
+                s3.put_object_acl(
+                    ACL="public-read", Bucket=bucket_name, Key=thumbnail_s3_key
+                )
+                data[
+                    "thumbnail"
+                ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
             except Exception as e:
                 print(e)
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -67,7 +71,10 @@ class UploadContent(APIView):
                 file_extension = image.name.split(".")[-1]
                 image_name = f"{image_id}.{file_extension}"
                 s3_key = f"images/{image_name}"
-                ContentImage.objects.create(content=content, file=f"https://kr.object.ncloudstorage.com/{bucket_name}/{s3_key}")
+                ContentImage.objects.create(
+                    content=content,
+                    file=f"https://kr.object.ncloudstorage.com/{bucket_name}/{s3_key}",
+                )
                 try:
                     s3.upload_fileobj(image.file, bucket_name, s3_key)
                     s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=s3_key)
