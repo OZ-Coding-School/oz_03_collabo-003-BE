@@ -130,7 +130,9 @@ class AcceptAnalysisRequest(APIView):
             ),
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="Forbidden - The user does not have permission to accept the request.",
-                examples={"application/json": {"error": "분석가만 의뢰를 수락할 수 있습니다."}},
+                examples={
+                    "application/json": {"error": "분석가만 의뢰를 수락할 수 있습니다."}
+                },
             ),
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="Not Found - The request does not exist.",
@@ -184,7 +186,9 @@ class AnalysisRequestList(APIView):
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="Forbidden - Only clients can access their own analysis requests.",
                 examples={
-                    "application/json": {"error": "의뢰자만 자신의 분석 요청 목록을 조회할 수 있습니다."}
+                    "application/json": {
+                        "error": "의뢰자만 자신의 분석 요청 목록을 조회할 수 있습니다."
+                    }
                 },
             ),
         },
@@ -210,7 +214,9 @@ class AcceptedAnalystsList(APIView):
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: UserSerializer(many=True),
-            status.HTTP_403_FORBIDDEN: openapi.Response(description="접근 권한이 없는 경우"),
+            status.HTTP_403_FORBIDDEN: openapi.Response(
+                description="접근 권한이 없는 경우"
+            ),
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="의뢰 요청이 존재하지 않는 경우"
             ),
@@ -234,7 +240,9 @@ class AcceptedAnalystsList(APIView):
 
         # 요청한 사용자가 의뢰자일 때만 접근 허용
         if request_obj.client != request.user:
-            return Response({"error": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN
+            )
 
         # 수락한 분석가 목록 조회
         analysts = request_obj.analyst.all()
@@ -263,15 +271,25 @@ class SelectAnalyst(APIView):
             ),
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="접근 권한이 없는 경우",
-                examples={"application/json": {"error": "의뢰자만 분석가를 선택할 수 있습니다."}},
+                examples={
+                    "application/json": {
+                        "error": "의뢰자만 분석가를 선택할 수 있습니다."
+                    }
+                },
             ),
             status.HTTP_400_BAD_REQUEST: openapi.Response(
                 description="잘못된 요청",
-                examples={"application/json": {"error": "선택된 분석가의 ID를 제공해야 합니다."}},
+                examples={
+                    "application/json": {
+                        "error": "선택된 분석가의 ID를 제공해야 합니다."
+                    }
+                },
             ),
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="의뢰 요청이나 분석가가 존재하지 않는 경우",
-                examples={"application/json": {"error": "선택된 분석가가 존재하지 않습니다."}},
+                examples={
+                    "application/json": {"error": "선택된 분석가가 존재하지 않습니다."}
+                },
             ),
         },
         operation_summary="분석가 선택 및 매칭",
@@ -472,11 +490,17 @@ class CheckAnalysisReport(APIView):
             status.HTTP_200_OK: AnalysisReportSerializer,
             status.HTTP_404_NOT_FOUND: openapi.Response(
                 description="보고서 또는 요청이 존재하지 않음",
-                examples={"application/json": {"error": "분석 보고서 또는 요청을 찾을 수 없습니다."}},
+                examples={
+                    "application/json": {
+                        "error": "분석 보고서 또는 요청을 찾을 수 없습니다."
+                    }
+                },
             ),
             status.HTTP_403_FORBIDDEN: openapi.Response(
                 description="권한이 없음",
-                examples={"application/json": {"error": "이 보고서를 조회할 권한이 없습니다."}},
+                examples={
+                    "application/json": {"error": "이 보고서를 조회할 권한이 없습니다."}
+                },
             ),
         },
         operation_summary="분석 보고서 조회",

@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
@@ -106,7 +107,9 @@ class SendVerificationCodeView(APIView):
 
             # 이메일로 인증 코드 생성 및 저장
             verification_code = str(random.randint(100000, 999999))
-            expires_at = timezone.now() + datetime.timedelta(minutes=10)  # 코드 만료 시간 설정
+            expires_at = timezone.now() + datetime.timedelta(
+                minutes=10
+            )  # 코드 만료 시간 설정
 
             # 인증 코드 저장
             VerificationCode.objects.update_or_create(
@@ -378,16 +381,6 @@ class UpdateRoleView(APIView):
 
 
 class PasswordResetView(APIView):
-    def post(self, request):
-        """
-        비밀번호 재설정 요청 및 확인 API
-        - 비밀번호 재설정 링크 발송 및 비밀번호 재설정
-        """
-        if "token" in request.data:
-            return self.reset_password(request)
-        else:
-            return self.request_reset(request)
-
     def request_reset(self, request):
         """
         비밀번호 재설정 요청 API
@@ -413,53 +406,24 @@ class PasswordResetView(APIView):
         }
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
-        # 프론트엔드의 패스워드 리셋 URL 설정
+        # 비밀번호 재설정 URL 설정
         reset_url = f"https://localhost:5173/password-reset?token={token}"
+
+        # HTML 이메일 내용 생성
+        html_message = render_to_string(
+            "password_reset_email.html", {"reset_url": reset_url}
+        )
 
         # 이메일 발송
         send_mail(
-            "비밀번호 재설정 요청",
-            f"안녕하세요,\n\n비밀번호 재설정을 요청하셨습니다. 비밀번호를 재설정하려면 다음 링크를 클릭하세요:\n{reset_url}\n\n만약 이 요청을 하지 않으셨다면, 이 이메일을 무시해주세요.",
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
+            subject="비밀번호 재설정 요청",
+            message="",  # 일반 텍스트 메시지는 비워둘 수 있음
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,  # HTML 메시지로 설정
         )
 
         return Response({"detail": "비밀번호 재설정 링크가 이메일로 전송되었습니다."})
-
-    def reset_password(self, request):
-        """
-        비밀번호 재설정 API
-        - 유효한 비밀번호 재설정 토큰을 통해 비밀번호를 새로 설정합니다.
-        """
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        token = request.data.get("token")
-        new_password = serializer.validated_data["password"]
-
-        try:
-            # 비밀번호 재설정 토큰 디코딩 및 검증
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            user = User.objects.filter(id=payload["id"], email=payload["email"]).first()
-            if not user:
-                return Response(
-                    {"detail": "사용자를 찾을 수 없습니다."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
-            # 비밀번호 설정
-            user.set_password(new_password)
-            user.save()
-            return Response({"detail": "비밀번호가 성공적으로 재설정되었습니다."})
-
-        except jwt.ExpiredSignatureError:
-            return Response(
-                {"detail": "토큰이 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST
-            )
-        except jwt.InvalidTokenError:
-            return Response(
-                {"detail": "유효하지 않은 토큰입니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
 
 class CookieAuthentication(BasePermission):
