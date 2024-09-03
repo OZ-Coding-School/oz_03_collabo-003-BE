@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Category
+from .serializers import CategorySerializer
 
 
 class CategoryView(APIView):
@@ -322,3 +323,26 @@ class CategoryListView(APIView):
                 }
             )
         return Response(result, status=status.HTTP_200_OK)
+
+
+class CategoryDetailView(APIView):
+    """
+    카테고리 목록 조회 API
+    특정 카테고리와 그에 속한 하위 카테고리 목록을 제공합니다.
+    """
+
+    @swagger_auto_schema(
+        operation_description="특정 카테고리 조회",
+        responses={
+            200: openapi.Response(
+                description="카테고리 조회 성공", schema=CategorySerializer
+            ),
+        },
+    )
+    def get(self, request, category_id):
+        try:
+            category = Category.objects.get(id=category_id)
+            serializer = CategorySerializer(category)
+            return Response(serializer.data)
+        except Category.DoesNotExist:
+            return Response({"error": "해당 카테고리가 존재하지 않습니다."}, status=404)
