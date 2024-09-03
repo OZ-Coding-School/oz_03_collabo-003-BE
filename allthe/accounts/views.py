@@ -407,7 +407,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"https://localhost:5173/password-reset/confirm?token={token}"
+        reset_url = f"http://127.0.0.1:8000/accounts/password-reset/{token}/"
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
@@ -427,15 +427,12 @@ class PasswordResetView(APIView):
 
 
 class PasswordResetConfirmView(APIView):
-    def post(self, request):
+    def post(self, request, token):
         """
         비밀번호 재설정 API
-        - 비밀번호 재설정 토큰을 URL 파라미터로 받고 새 비밀번호로 업데이트합니다.
+        - 비밀번호 재설정 토큰을 URL 경로에서 받고 새 비밀번호로 업데이트합니다.
         """
-        # URL 파라미터에서 토큰 읽기
-        token = request.query_params.get("token")
         new_password = request.data.get("new_password")
-
         if not token or not new_password:
             return Response(
                 {"detail": "토큰과 새 비밀번호가 필요합니다."},

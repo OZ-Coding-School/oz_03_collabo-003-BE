@@ -50,7 +50,7 @@ urlpatterns = [
     path("refresh-token/", RefreshTokenView.as_view(), name="refresh-token"),
     path("password-reset/", PasswordResetView.as_view(), name="password_reset"),
     path(
-        "password-reset/confirm/",
+        "password-reset/<str:token>/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
