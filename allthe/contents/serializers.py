@@ -28,11 +28,37 @@ class ContentImageSerializer(serializers.ModelSerializer):
 
 
 class ContentSerializer(serializers.ModelSerializer):
-    images = ContentImageSerializer(many=True, read_only=True)
+    average_rating = serializers.SerializerMethodField()
+    views_count = serializers.IntegerField()
+    likes_count = serializers.IntegerField()
 
     class Meta:
         model = Content
-        fields = "__all__"
+        fields = [
+            "id",
+            "title",
+            "content",
+            "main_category",
+            "semi_category",
+            "thumbnail",
+            "site_url",
+            "site_description",
+            "is_analyzed",
+            "created_at",
+            "updated_at",
+            "views_count",
+            "likes_count",
+            "average_rating",
+            # 기타 필드들
+        ]
+
+    def get_average_rating(self, obj):
+        reviews = Review.objects.filter(content=obj)
+        if reviews.exists():
+            return reviews.aggregate(average_rating=models.Avg("rating"))[
+                "average_rating"
+            ]
+        return 0
 
 
 # 콘텐츠 시리얼라이저

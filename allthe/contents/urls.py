@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import AddReview
+from .views import ContentDetailView
 from .views import DeleteContent
 from .views import DeleteReview
 from .views import LikedContentList
@@ -26,4 +27,5 @@ urlpatterns = [
     path("liked-content/", LikedContentList.as_view(), name="liked_content_list"),
     path("<int:content_id>/qna/", QnAList.as_view(), name="qna-list"),
     path("qna/", QnACreate.as_view(), name="qna-create"),
+    path("content/<int:pk>/", ContentDetailView.as_view(), name="content-detail"),
 ]

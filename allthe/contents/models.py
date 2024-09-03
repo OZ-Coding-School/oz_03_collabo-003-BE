@@ -29,8 +29,19 @@ class Content(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # 새로운 필드 추가
+    views_count = models.PositiveIntegerField(default=0)  # 조회수
+    likes_count = models.PositiveIntegerField(default=0)  # 찜수
+
     def __str__(self):
         return self.title
+
+    def get_likes_count(self):
+        return Like.objects.filter(content=self).count()
+
+    def increment_views(self):
+        self.views_count += 1
+        self.save()
 
 
 class ContentImage(models.Model):

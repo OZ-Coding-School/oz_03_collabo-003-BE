@@ -187,6 +187,24 @@ class DeleteContent(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ContentDetailView(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+
+    def get(self, request, pk):
+        try:
+            content = Content.objects.get(pk=pk)
+            # 조회수 증가
+            content.increment_views()
+        except Content.DoesNotExist:
+            return Response(
+                {"error": "콘텐츠를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = ContentSerializer(content)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class AddReview(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
 
