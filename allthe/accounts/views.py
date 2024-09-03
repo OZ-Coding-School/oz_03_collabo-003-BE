@@ -241,8 +241,16 @@ class UserLoginView(APIView):
 
         # 사용자 인증
         user = User.objects.filter(email=email).first()
-        if user is None or not user.check_password(password):
-            raise AuthenticationFailed("Invalid email or password")
+        if user is None:
+            return Response(
+                {"error": "존재하지 않는 사용자입니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if not user.check_password(password):
+            return Response(
+                {"error": "비밀번호가 일치하지 않습니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         # Access Token 생성
         payload = {
@@ -253,15 +261,18 @@ class UserLoginView(APIView):
         access_token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # Refresh Token 생성
-        refresh = RefreshToken.for_user(user)
-        refresh_token = str(refresh)
+        refresh = RefreshToken.objects.create(user=user)
+        refresh_token = str(refresh.token)
 
         response = Response(
             {
                 "userId": user.id,
                 "email": user.email,
                 "username": user.username,
-            }
+                "accessToken": access_token,
+                "refreshToken": refresh_token,
+            },
+            status=200,  # 로그인 성공 시 상태 코드 200
         )
 
         # 쿠키에 토큰 설정
@@ -270,14 +281,16 @@ class UserLoginView(APIView):
             value=access_token,
             httponly=True,
             expires=timezone.now() + datetime.timedelta(days=7),
-            domain="allthe.store",
+            domain="allthe.store",  # 도메인 설정 필요
+            secure=True,  # HTTPS에서만 쿠키를 전송하도록 설정
         )
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
             expires=timezone.now() + datetime.timedelta(days=30),
-            domain="allthe.store",
+            domain="allthe.store",  # 도메인 설정 필요
+            secure=True,  # HTTPS에서만 쿠키를 전송하도록 설정
         )
 
         return response
@@ -407,7 +420,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"https://localhost:5173/password-reset/confirm?token={token}"
+        reset_url = f"http://127.0.0.1:8000/accounts/password-reset?token={token}"
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
@@ -430,11 +443,20 @@ class PasswordResetConfirmView(APIView):
     def post(self, request):
         """
         비밀번호 재설정 API
-        - 비밀번호 재설정 토큰을 URL 파라미터로 받고 새 비밀번호로 업데이트합니다.
+        - 비밀번호 재설정 토큰과 새 비밀번호를 요청 본문에서 받습니다.
         """
-        # URL 파라미터에서 토큰 읽기
+        # 요청 본문에서 토큰과 새 비밀번호 읽기
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # URL에서 토큰 추출
         token = request.query_params.get("token")
-        new_password = request.data.get("new_password")
+
+        # 요청 본문에서 새 비밀번호 읽기
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_password = serializer.validated_data.get("new_password")
 
         if not token or not new_password:
             return Response(
@@ -444,6 +466,7 @@ class PasswordResetConfirmView(APIView):
 
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            user_id = payload["id"]  # 사용자 ID만 추출
         except jwt.ExpiredSignatureError:
             return Response(
                 {"detail": "토큰이 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST
@@ -454,7 +477,7 @@ class PasswordResetConfirmView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = User.objects.filter(id=payload["id"], email=payload["email"]).first()
+        user = User.objects.get(id=user_id)  # 사용자 ID로 사용자 조회
         if not user:
             return Response(
                 {"detail": "유효하지 않은 사용자입니다."},
@@ -464,7 +487,10 @@ class PasswordResetConfirmView(APIView):
         user.set_password(new_password)
         user.save()
 
-        return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."})
+        return Response(
+            {"detail": "비밀번호가 성공적으로 변경되었습니다."},
+            status=status.HTTP_200_OK,
+        )
 
 
 class CookieAuthentication(BasePermission):
