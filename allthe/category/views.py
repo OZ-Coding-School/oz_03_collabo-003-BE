@@ -1,11 +1,13 @@
 # category/views.py
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from .models import Category
 from common.decorators import admin_required
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Category
+
 
 class CategoryView(APIView):
     """
@@ -18,35 +20,36 @@ class CategoryView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description='카테고리 이름'),
-            }
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="카테고리 이름"
+                ),
+            },
         ),
         responses={
             201: openapi.Response(
                 description="카테고리 생성 성공",
-                examples={
-                    "application/json": {
-                        "id": 1,
-                        "name": "새로운 카테고리"
-                    }
-                }
+                examples={"application/json": {"id": 1, "name": "새로운 카테고리"}},
             ),
             400: "잘못된 요청",
             401: "인증 실패",
             403: "권한 없음",
-        }
+        },
     )
     @admin_required
     def post(self, request):
         """
         새로운 카테고리를 생성합니다.
         """
-        name = request.data.get('name')
+        name = request.data.get("name")
         if not name:
-            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         category = Category.objects.create(name=name)
-        return Response({"id": category.id, "name": category.name}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"id": category.id, "name": category.name}, status=status.HTTP_201_CREATED
+        )
 
     @swagger_auto_schema(
         operation_description="기존 카테고리 삭제",
@@ -54,15 +57,13 @@ class CategoryView(APIView):
             200: openapi.Response(
                 description="카테고리 삭제 성공",
                 examples={
-                    "application/json": {
-                        "message": "카테고리가 삭제되었습니다."
-                    }
-                }
+                    "application/json": {"message": "카테고리가 삭제되었습니다."}
+                },
             ),
             404: "카테고리를 찾을 수 없음",
             401: "인증 실패",
             403: "권한 없음",
-        }
+        },
     )
     @admin_required
     def delete(self, request, category_id):
@@ -72,33 +73,35 @@ class CategoryView(APIView):
         try:
             category = Category.objects.get(id=category_id)
             category.delete()
-            return Response({"message": "카테고리가 삭제되었습니다."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "카테고리가 삭제되었습니다."}, status=status.HTTP_200_OK
+            )
         except Category.DoesNotExist:
-            return Response({"error": "카테고리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "카테고리를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
     @swagger_auto_schema(
         operation_description="카테고리 수정",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description='수정할 카테고리 이름'),
-            }
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="수정할 카테고리 이름"
+                ),
+            },
         ),
         responses={
             200: openapi.Response(
                 description="카테고리 수정 성공",
-                examples={
-                    "application/json": {
-                        "id": 1,
-                        "name": "수정된 카테고리"
-                    }
-                }
+                examples={"application/json": {"id": 1, "name": "수정된 카테고리"}},
             ),
             400: "잘못된 요청",
             401: "인증 실패",
             403: "권한 없음",
             404: "카테고리를 찾을 수 없음",
-        }
+        },
     )
     @admin_required
     def put(self, request, category_id):
@@ -108,15 +111,23 @@ class CategoryView(APIView):
         try:
             category = Category.objects.get(id=category_id)
         except Category.DoesNotExist:
-            return Response({"error": "카테고리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "카테고리를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        name = request.data.get('name')
+        name = request.data.get("name")
         if not name:
-            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         category.name = name
         category.save()
-        return Response({"id": category.id, "name": category.name}, status=status.HTTP_200_OK)
+        return Response(
+            {"id": category.id, "name": category.name}, status=status.HTTP_200_OK
+        )
+
 
 class SubCategoryView(APIView):
     """
@@ -129,8 +140,10 @@ class SubCategoryView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description='하위 카테고리 이름'),
-            }
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="하위 카테고리 이름"
+                ),
+            },
         ),
         responses={
             201: openapi.Response(
@@ -139,36 +152,44 @@ class SubCategoryView(APIView):
                     "application/json": {
                         "id": 2,
                         "name": "하위 카테고리",
-                        "parentId": 1
+                        "parentId": 1,
                     }
-                }
+                },
             ),
             400: "잘못된 요청",
             401: "인증 실패",
             403: "권한 없음",
             404: "부모 카테고리를 찾을 수 없음",
-        }
+        },
     )
     @admin_required
     def post(self, request, category_id):
         """
         지정된 카테고리의 하위 카테고리를 생성합니다.
         """
-        name = request.data.get('name')
+        name = request.data.get("name")
         if not name:
-            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             parent_category = Category.objects.get(id=category_id)
         except Category.DoesNotExist:
-            return Response({"error": "부모 카테고리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-        
+            return Response(
+                {"error": "부모 카테고리를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         subcategory = Category.objects.create(name=name, parent=parent_category)
-        return Response({
-            "id": subcategory.id,
-            "name": subcategory.name,
-            "parentId": parent_category.id
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "id": subcategory.id,
+                "name": subcategory.name,
+                "parentId": parent_category.id,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
     @swagger_auto_schema(
         operation_description="하위 카테고리 삭제",
@@ -176,15 +197,13 @@ class SubCategoryView(APIView):
             200: openapi.Response(
                 description="하위 카테고리 삭제 성공",
                 examples={
-                    "application/json": {
-                        "message": "하위 카테고리가 삭제되었습니다."
-                    }
-                }
+                    "application/json": {"message": "하위 카테고리가 삭제되었습니다."}
+                },
             ),
             404: "카테고리를 찾을 수 없음",
             401: "인증 실패",
             403: "권한 없음",
-        }
+        },
     )
     @admin_required
     def delete(self, request, category_id, subcategory_id):
@@ -194,17 +213,25 @@ class SubCategoryView(APIView):
         try:
             subcategory = Category.objects.get(id=subcategory_id, parent_id=category_id)
             subcategory.delete()
-            return Response({"message": "하위 카테고리가 삭제되었습니다."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "하위 카테고리가 삭제되었습니다."},
+                status=status.HTTP_200_OK,
+            )
         except Category.DoesNotExist:
-            return Response({"error": "하위 카테고리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-        
+            return Response(
+                {"error": "하위 카테고리를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
     @swagger_auto_schema(
         operation_description="하위 카테고리 수정",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description='수정할 하위 카테고리 이름'),
-            }
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="수정할 하위 카테고리 이름"
+                ),
+            },
         ),
         responses={
             200: openapi.Response(
@@ -213,15 +240,15 @@ class SubCategoryView(APIView):
                     "application/json": {
                         "id": 2,
                         "name": "수정된 하위 카테고리",
-                        "parentId": 1
+                        "parentId": 1,
                     }
-                }
+                },
             ),
             400: "잘못된 요청",
             401: "인증 실패",
             403: "권한 없음",
             404: "카테고리를 찾을 수 없음",
-        }
+        },
     )
     @admin_required
     def put(self, request, category_id, subcategory_id):
@@ -231,19 +258,28 @@ class SubCategoryView(APIView):
         try:
             subcategory = Category.objects.get(id=subcategory_id, parent_id=category_id)
         except Category.DoesNotExist:
-            return Response({"error": "하위 카테고리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "하위 카테고리를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        name = request.data.get('name')
+        name = request.data.get("name")
         if not name:
-            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         subcategory.name = name
         subcategory.save()
-        return Response({
-            "id": subcategory.id,
-            "name": subcategory.name,
-            "parentId": subcategory.parent_id
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "id": subcategory.id,
+                "name": subcategory.name,
+                "parentId": subcategory.parent_id,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 class CategoryListView(APIView):
     """
@@ -261,14 +297,12 @@ class CategoryListView(APIView):
                         {
                             "id": 1,
                             "name": "업무 툴",
-                            "subcategories": [
-                                {"id": 2, "name": "업무효율화"}
-                            ]
+                            "subcategories": [{"id": 2, "name": "업무효율화"}],
                         }
                     ]
-                }
+                },
             ),
-        }
+        },
     )
     def get(self, request):
         """
@@ -278,10 +312,13 @@ class CategoryListView(APIView):
         result = []
         for category in categories:
             subcategories = Category.objects.filter(parent=category)
-            result.append({
-                "id": category.id,
-                "name": category.name,
-                "subcategories": [{"id": sub.id, "name": sub.name} for sub in subcategories]
-            })
+            result.append(
+                {
+                    "id": category.id,
+                    "name": category.name,
+                    "subcategories": [
+                        {"id": sub.id, "name": sub.name} for sub in subcategories
+                    ],
+                }
+            )
         return Response(result, status=status.HTTP_200_OK)
-    
