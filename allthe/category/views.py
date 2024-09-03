@@ -339,10 +339,10 @@ class CategoryDetailView(APIView):
             ),
         },
     )
-    def get(self, request):
-        """
-        모든 카테고리와 그에 속한 하위 카테고리 목록을 반환합니다.
-        """
-        categories = Category.objects.filter(parent=None)
-        serializer = CategorySerializer(categories, many=True)
-        return Response(serializer.data)
+    def get(self, request, category_id):
+        try:
+            category = Category.objects.get(id=category_id)
+            serializer = CategorySerializer(category)
+            return Response(serializer.data)
+        except Category.DoesNotExist:
+            return Response({'error': '해당 카테고리가 존재하지 않습니다.'}, status=404)
