@@ -4,6 +4,7 @@ from django.urls import path
 from .views import CategoryListView
 from .views import CategoryView
 from .views import SubCategoryView
+from .views import CategoryDetailView
 
 urlpatterns = [
     # 카테고리 수정 및 삭제
@@ -16,4 +17,7 @@ urlpatterns = [
     ),
     # 카테고리 목록 조회
     path("list", CategoryListView.as_view(), name="category-list"),
+    
+    # 카테고리 목록 조회2
+    path('detail/<int:category_id>/', CategoryDetailView.as_view()),
 ]

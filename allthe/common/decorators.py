@@ -31,13 +31,9 @@ def analyst_required(view_func):
 
 
 def admin_required(view_func):
-    """관리자 권한 확인 데코레이터"""
-
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if (
-            not request.user.is_authenticated or request.user.role != "admin"
-        ):  # admin 모델과 연동하여 실제 관리자 확인 로직 추가 필요
+        if not request.user.is_authenticated or not request.user.is_staff:
             return JsonResponse({"error": "관리자 권한이 필요합니다."}, status=403)
         return view_func(request, *args, **kwargs)
 
