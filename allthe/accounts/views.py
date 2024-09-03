@@ -241,8 +241,16 @@ class UserLoginView(APIView):
 
         # 사용자 인증
         user = User.objects.filter(email=email).first()
-        if user is None or not user.check_password(password):
-            raise AuthenticationFailed("Invalid email or password")
+        if user is None:
+            return Response(
+                {"error": "존재하지 않는 사용자입니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if not user.check_password(password):
+            return Response(
+                {"error": "비밀번호가 일치하지 않습니다."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         # Access Token 생성
         payload = {
@@ -479,7 +487,10 @@ class PasswordResetConfirmView(APIView):
         user.set_password(new_password)
         user.save()
 
-        return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."})
+        return Response(
+            {"detail": "비밀번호가 성공적으로 변경되었습니다."},
+            status=status.HTTP_200_OK,
+        )
 
 
 class CookieAuthentication(BasePermission):
