@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import boto3
 from accounts.models import User
@@ -10,7 +11,6 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import uuid
 
 from .models import Content
 from .models import ContentImage

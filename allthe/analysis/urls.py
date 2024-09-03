@@ -2,13 +2,13 @@ from django.urls import path
 
 from .views import AcceptAnalysisRequest
 from .views import AcceptedAnalystsList
+from .views import AnalysisRequest
 from .views import AnalysisRequestDetail
 from .views import AnalysisRequestList
 from .views import AnalystAcceptedRequestsList
 from .views import CheckAnalysisReport
 from .views import SelectAnalyst
 from .views import UploadAnalysisReport
-from .views import AnalysisRequest
 
 urlpatterns = [
     path("", AnalysisRequest.as_view()),
