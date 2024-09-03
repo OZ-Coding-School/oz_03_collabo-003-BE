@@ -381,7 +381,7 @@ class UpdateRoleView(APIView):
 
 
 class PasswordResetView(APIView):
-    def request_reset(self, request):
+    def post(self, request):
         """
         비밀번호 재설정 요청 API
         - 사용자의 이메일로 비밀번호 재설정 링크를 포함한 이메일을 발송합니다.
