@@ -107,7 +107,9 @@ class SendVerificationCodeView(APIView):
 
             # 이메일로 인증 코드 생성 및 저장
             verification_code = str(random.randint(100000, 999999))
-            expires_at = timezone.now() + datetime.timedelta(minutes=10)  # 코드 만료 시간 설정
+            expires_at = timezone.now() + datetime.timedelta(
+                minutes=10
+            )  # 코드 만료 시간 설정
 
             # 인증 코드 저장
             VerificationCode.objects.update_or_create(
