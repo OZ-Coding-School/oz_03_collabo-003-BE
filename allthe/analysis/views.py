@@ -5,6 +5,10 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+import boto3
+import uuid
+import os
+
 
 from .models import AnalysisReport
 from .models import AnalysisRequest
@@ -16,9 +20,16 @@ from .serializers import AnalysisRequestSerializerList
 from .serializers import AnalystSerializer
 from .serializers import UserSerializer
 
+bucket_name = "allthe"
+s3 = boto3.client(
+    "s3",
+    endpoint_url="https://kr.object.ncloudstorage.com",
+    aws_access_key_id=os.getenv("NCP_Access_Key"),
+    aws_secret_access_key=os.getenv("NCP_Secret_Key"),
+)
 
-# 의뢰요청(post), 의뢰목록(get)
-class AnalysisRequestList(APIView):
+# 의뢰요청(post)
+class AnalysisRequest(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -48,7 +59,8 @@ class AnalysisRequestList(APIView):
             serializer.save()  # 요청한 사용자 정보를 의뢰자로 설정
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+class AnalysisRequestList(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
@@ -103,10 +115,11 @@ class AnalysisRequestDetail(APIView):
     )
     def get(self, request, pk):
         # 의뢰 객체를 조회
-        try:
-            request_obj = AnalysisRequest.objects.get(pk=pk)
-        except AnalysisRequest.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        request_obj = AnalysisRequest.objects.get(pk=pk)
+        # 객체가 없으면 404 응답 반환
+        if not request_obj:
+            return Response({"error": "Request not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
         serializer = AnalysisRequestSerializerDetail(request_obj)
         return Response(serializer.data)
@@ -459,6 +472,20 @@ class UploadAnalysisReport(APIView):
                 {"error": "A report already exists for this request."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+        report_id = str(uuid.uuid4())
+        file_extension = report_file.name.split(".")[-1]
+        report_name = f"{report_id}.{file_extension}"
+        report_s3_key = f"reports/{report_name}"
+        try:
+            s3.upload_fileobj(report_file.file, bucket_name, report_s3_key)
+            s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=report_s3_key)
+            report_file =f"https://kr.object.ncloudstorage.com/{bucket_name}/{report_s3_key}"
+        except Exception as e:
+            print(e)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
 
         # 보고서 생성 및 저장
         report = AnalysisReport(
@@ -568,6 +595,19 @@ class AnalystListCreate(APIView):
                 {"error": "Only analysts can make profile."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        analyst_image = request.FILES.get("analyst_image")
+        if analyst_image:
+            image_id = str(uuid.uuid4())
+            file_extension = analyst_image.name.split(".")[-1]
+            image_name = f"{image_id}.{file_extension}"
+            image_s3_key = f"analyst_images/{image_name}"
+            try:
+                s3.upload_fileobj(analyst_image.file, bucket_name, image_s3_key)
+                s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=image_s3_key)
+                request["analyst_image"] =f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"            
+            except Exception as e:
+                print(e)
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         # 새 분석가 객체를 생성
         serializer = AnalystSerializer(data=request.data)
         if serializer.is_valid():
@@ -612,6 +652,19 @@ class AnalystDetail(APIView):
                     {"detail": "You do not have permission to edit this profile."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
+            analyst_image = request.FILES.get("analyst_image")
+            if analyst_image:
+                image_id = str(uuid.uuid4())
+                file_extension = analyst_image.name.split(".")[-1]
+                image_name = f"{image_id}.{file_extension}"
+                image_s3_key = f"analyst_images/{image_name}"
+                try:
+                    s3.upload_fileobj(analyst_image.file, bucket_name, image_s3_key)
+                    s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=image_s3_key)
+                    request["analyst_image"] =f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"            
+                except Exception as e:
+                    print(e)
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             serializer = AnalystSerializer(analyst, data=request.data, partial=True)
             if serializer.is_valid():
