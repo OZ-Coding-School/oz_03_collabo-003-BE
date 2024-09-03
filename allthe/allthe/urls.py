@@ -46,6 +46,7 @@ urlpatterns = [
     path("analysts/", AnalystListCreate.as_view(), name="analyst-list-create"),
     path("analysts/<int:pk>/", AnalystDetail.as_view(), name="analyst-detail"),
     path("payments/", include("payments.urls")),
+    path("category/", include("category.urls")),
     # Swagger UI
     path(
         "swagger/",

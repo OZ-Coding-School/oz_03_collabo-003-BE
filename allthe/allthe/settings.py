@@ -57,6 +57,7 @@ CUSTOM_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "storages",
+    "category",
 ]
 
 DEFAULT_APPS = [
