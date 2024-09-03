@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from .models import AnalysisReport
 from .models import AnalysisRequest
 from .models import Analyst
+from .models import Content
 from .serializers import AnalysisReportSerializer
 from .serializers import AnalysisRequestSerializer
 from .serializers import AnalysisRequestSerializerDetail
@@ -30,7 +31,7 @@ s3 = boto3.client(
 
 
 # 의뢰요청(post)
-class AnalysisRequest(APIView):
+class CreateAnalysisRequest(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -429,7 +430,7 @@ class UploadAnalysisReport(APIView):
 
         # 요청 데이터에서 의뢰 ID와 보고서 파일을 가져옴
         request_id = request.data.get("request")
-        report_file = request.FILES.get("report")  # 필드 이름 수정
+        report_file = request.FILES.get("file")  # 필드 이름 수정
 
         if not request_id or not report_file:
             return Response(
@@ -475,14 +476,17 @@ class UploadAnalysisReport(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         # 보고서 생성 및 저장
-        report = AnalysisReport(
-            request=analysis_request, report=report_file
-        )  # 필드 이름 수정
+        report = AnalysisReport(request=analysis_request, file=report_file)  # 필드 이름 수정
         report.save()
 
         # 의뢰 상태를 'COMPLETED'로 변경
         analysis_request.status = "COMPLETED"
         analysis_request.save()
+
+        # 콘텐츠 분석상태 수정
+        content = analysis_request.content_id
+        content.is_analyzed = True
+        content.save()
 
         serializer = AnalysisReportSerializer(report)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -570,6 +574,9 @@ class AnalystListCreate(APIView):
         responses={201: AnalystSerializer},
     )
     def post(self, request):
+        data = request.data.copy()
+        user = request.user
+        data["user"] = user.id
         # 요청한 사용자가 분석가인지 확인
         if request.user.role != "analyst":
             return Response(
@@ -587,17 +594,17 @@ class AnalystListCreate(APIView):
                 s3.put_object_acl(
                     ACL="public-read", Bucket=bucket_name, Key=image_s3_key
                 )
-                request[
+                data[
                     "analyst_image"
                 ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"
             except Exception as e:
                 print(e)
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         # 새 분석가 객체를 생성
-        serializer = AnalystSerializer(data=request.data)
+        serializer = AnalystSerializer(data=data)
         if serializer.is_valid():
             # 현재 사용자를 프로필 생성자(user)로 설정
-            serializer.validated_data["user"] = request.user
+            # serializer.validated_data["user"] = request.user
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

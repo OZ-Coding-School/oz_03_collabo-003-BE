@@ -2,16 +2,16 @@ from django.urls import path
 
 from .views import AcceptAnalysisRequest
 from .views import AcceptedAnalystsList
-from .views import AnalysisRequest
 from .views import AnalysisRequestDetail
 from .views import AnalysisRequestList
 from .views import AnalystAcceptedRequestsList
 from .views import CheckAnalysisReport
+from .views import CreateAnalysisRequest
 from .views import SelectAnalyst
 from .views import UploadAnalysisReport
 
 urlpatterns = [
-    path("", AnalysisRequest.as_view()),
+    path("", CreateAnalysisRequest.as_view()),
     path("list", AnalysisRequestList.as_view()),
     path("<int:pk>", AnalysisRequestDetail.as_view()),
     path("accept/<int:pk>", AcceptAnalysisRequest.as_view()),
