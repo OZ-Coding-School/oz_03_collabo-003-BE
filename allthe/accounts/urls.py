@@ -16,6 +16,7 @@ from .views import KakaoLogout
 from .views import NaverCallback
 from .views import NaverLogin
 from .views import NaverLogout
+from .views import PasswordResetConfirmView
 from .views import PasswordResetView
 from .views import RefreshTokenView
 from .views import SendVerificationCodeView
@@ -47,11 +48,11 @@ urlpatterns = [
     path("profile/", UserProfileView.as_view(), name="user-profile"),
     path("logout/", UserLogoutView.as_view(), name="user-logout"),
     path("refresh-token/", RefreshTokenView.as_view(), name="refresh-token"),
-    path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
+    path("password-reset/", PasswordResetView.as_view(), name="password_reset"),
     path(
-        "password-reset/confirm",
-        PasswordResetView.as_view(),
-        name="password-reset-confirm",
+        "password-reset/confirm/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
     ),
     path("account-delete/", UserAccountView.as_view(), name="account-delete"),
     path("check-username/", UsernameCheckView.as_view(), name="check-username"),
