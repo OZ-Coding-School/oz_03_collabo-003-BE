@@ -1,10 +1,10 @@
 from functools import wraps
-from rest_framework.response import Response
 
 from accounts.models import User
 from contents.models import Content
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
 
 
 def client_required(view_func):
@@ -36,6 +36,7 @@ def admin_required(func):
         if not request.user.is_authenticated or not request.user.is_staff:
             return Response({"error": "인증 실패 또는 권한 없음"}, status=403)
         return func(request, *args, **kwargs)
+
     return _wrapped_view
 
 

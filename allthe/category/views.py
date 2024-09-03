@@ -324,9 +324,10 @@ class CategoryListView(APIView):
             )
         return Response(result, status=status.HTTP_200_OK)
 
+
 class CategoryDetailView(APIView):
     """
-    카테고리 목록 조회 API 
+    카테고리 목록 조회 API
     특정 카테고리와 그에 속한 하위 카테고리 목록을 제공합니다.
     """
 
@@ -334,8 +335,7 @@ class CategoryDetailView(APIView):
         operation_description="특정 카테고리 조회",
         responses={
             200: openapi.Response(
-                description="카테고리 조회 성공",
-                schema=CategorySerializer
+                description="카테고리 조회 성공", schema=CategorySerializer
             ),
         },
     )
@@ -345,4 +345,4 @@ class CategoryDetailView(APIView):
             serializer = CategorySerializer(category)
             return Response(serializer.data)
         except Category.DoesNotExist:
-            return Response({'error': '해당 카테고리가 존재하지 않습니다.'}, status=404)
+            return Response({"error": "해당 카테고리가 존재하지 않습니다."}, status=404)

@@ -57,17 +57,17 @@ class UsernameCheckView(APIView):
         operation_description="사용자 이름 중복 확인",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['username'],
+            required=["username"],
             properties={
-                'username': openapi.Schema(type=openapi.TYPE_STRING, description="확인할 사용자 이름"),
+                "username": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="확인할 사용자 이름"
+                ),
             },
         ),
         responses={
             200: openapi.Response(
                 description="사용 가능한 사용자 이름",
-                examples={
-                    "application/json": {"message": "사용 가능한 닉네임입니다."}
-                },
+                examples={"application/json": {"message": "사용 가능한 닉네임입니다."}},
             ),
             400: openapi.Response(
                 description="이미 존재하는 사용자 이름",
@@ -106,17 +106,17 @@ class EmailCheckView(APIView):
         operation_description="이메일 중복 확인",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['email'],
+            required=["email"],
             properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description="확인할 이메일 주소"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="확인할 이메일 주소"
+                ),
             },
         ),
         responses={
             200: openapi.Response(
                 description="사용 가능한 이메일",
-                examples={
-                    "application/json": {"message": "사용 가능한 이메일입니다."}
-                },
+                examples={"application/json": {"message": "사용 가능한 이메일입니다."}},
             ),
             400: openapi.Response(
                 description="이미 존재하는 이메일",
@@ -147,20 +147,25 @@ class SendVerificationCodeView(APIView):
     이메일로 인증 코드를 전송하는 API
     - 사용자가 제공한 이메일 주소로 인증 코드를 발송합니다.
     """
+
     @swagger_auto_schema(
         operation_description="이메일로 인증 코드 전송",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['email'],
+            required=["email"],
             properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description="인증 코드를 받을 이메일 주소"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="인증 코드를 받을 이메일 주소"
+                ),
             },
         ),
         responses={
             200: openapi.Response(
                 description="인증 코드 전송 성공",
                 examples={
-                    "application/json": {"detail": "인증 코드가 이메일로 전송되었습니다."}
+                    "application/json": {
+                        "detail": "인증 코드가 이메일로 전송되었습니다."
+                    }
                 },
             ),
             400: "잘못된 요청",
@@ -203,14 +208,19 @@ class VerifyCodeView(APIView):
     인증 코드를 확인하는 API
     - 제공된 인증 코드가 유효한지 확인합니다.
     """
+
     @swagger_auto_schema(
         operation_description="인증 코드 확인",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['email', 'verification_code'],
+            required=["email", "verification_code"],
             properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description="이메일 주소"),
-                'verification_code': openapi.Schema(type=openapi.TYPE_STRING, description="확인할 인증 코드"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="이메일 주소"
+                ),
+                "verification_code": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="확인할 인증 코드"
+                ),
             },
         ),
         responses={
@@ -222,9 +232,7 @@ class VerifyCodeView(APIView):
             ),
             400: openapi.Response(
                 description="잘못된 인증 코드 또는 만료된 코드",
-                examples={
-                    "application/json": {"detail": "잘못된 인증 코드입니다."}
-                },
+                examples={"application/json": {"detail": "잘못된 인증 코드입니다."}},
             ),
         },
     )
@@ -264,24 +272,31 @@ class FinalSignupView(APIView):
     최종 회원가입 API
     - 인증 코드가 확인된 후 사용자 계정을 최종 등록합니다.
     """
+
     @swagger_auto_schema(
         operation_description="최종 회원가입 처리",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['username', 'email', 'verification_code', 'password'],
+            required=["username", "email", "verification_code", "password"],
             properties={
-                'username': openapi.Schema(type=openapi.TYPE_STRING, description="사용자 이름"),
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description="이메일 주소"),
-                'verification_code': openapi.Schema(type=openapi.TYPE_STRING, description="인증 코드"),
-                'password': openapi.Schema(type=openapi.TYPE_STRING, description="비밀번호"),
+                "username": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="사용자 이름"
+                ),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="이메일 주소"
+                ),
+                "verification_code": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="인증 코드"
+                ),
+                "password": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="비밀번호"
+                ),
             },
         ),
         responses={
             201: openapi.Response(
                 description="회원가입 성공",
-                examples={
-                    "application/json": {"detail": "회원가입이 완료되었습니다."}
-                },
+                examples={"application/json": {"detail": "회원가입이 완료되었습니다."}},
             ),
             400: "잘못된 요청 또는 유효하지 않은 데이터",
         },
@@ -346,10 +361,14 @@ class UserLoginView(APIView):
         operation_description="사용자 로그인",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['email', 'password'],
+            required=["email", "password"],
             properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description="이메일 주소"),
-                'password': openapi.Schema(type=openapi.TYPE_STRING, description="비밀번호"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="이메일 주소"
+                ),
+                "password": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="비밀번호"
+                ),
             },
         ),
         responses={
@@ -361,7 +380,7 @@ class UserLoginView(APIView):
                         "email": "user@example.com",
                         "username": "username",
                         "accessToken": "access_token_here",
-                        "refreshToken": "refresh_token_here"
+                        "refreshToken": "refresh_token_here",
                     }
                 },
             ),
@@ -443,7 +462,7 @@ class UserProfileView(APIView):
                     "application/json": {
                         "id": 1,
                         "username": "username",
-                        "email": "user@example.com"
+                        "email": "user@example.com",
                     }
                 },
             ),
@@ -481,9 +500,7 @@ class UserLogoutView(APIView):
         responses={
             200: openapi.Response(
                 description="로그아웃 성공",
-                examples={
-                    "application/json": {"message": "Successfully logged out"}
-                },
+                examples={"application/json": {"message": "Successfully logged out"}},
             ),
         },
     )
@@ -500,13 +517,16 @@ class UserLogoutView(APIView):
 
 class RefreshTokenView(APIView):
     permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         operation_description="액세스 토큰 갱신",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['refresh_token'],
+            required=["refresh_token"],
             properties={
-                'refresh_token': openapi.Schema(type=openapi.TYPE_STRING, description="리프레시 토큰"),
+                "refresh_token": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="리프레시 토큰"
+                ),
             },
         ),
         responses={
@@ -556,13 +576,16 @@ class RefreshTokenView(APIView):
 
 class UpdateRoleView(APIView):
     permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         operation_description="사용자 역할 업데이트",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['role'],
+            required=["role"],
             properties={
-                'role': openapi.Schema(type=openapi.TYPE_STRING, description="새로운 사용자 역할"),
+                "role": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="새로운 사용자 역할"
+                ),
             },
         ),
         responses={
@@ -571,7 +594,7 @@ class UpdateRoleView(APIView):
                 examples={
                     "application/json": {
                         "message": "User role updated successfully.",
-                        "role": "new_role"
+                        "role": "new_role",
                     }
                 },
             ),
@@ -602,16 +625,21 @@ class PasswordResetView(APIView):
         operation_description="비밀번호 재설정 요청",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['email'],
+            required=["email"],
             properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description="비밀번호를 재설정할 이메일 주소"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="비밀번호를 재설정할 이메일 주소",
+                ),
             },
         ),
         responses={
             200: openapi.Response(
                 description="비밀번호 재설정 링크 전송 성공",
                 examples={
-                    "application/json": {"detail": "비밀번호 재설정 링크가 이메일로 전송되었습니다."}
+                    "application/json": {
+                        "detail": "비밀번호 재설정 링크가 이메일로 전송되었습니다."
+                    }
                 },
             ),
             404: "사용자를 찾을 수 없음",
@@ -667,19 +695,28 @@ class PasswordResetConfirmView(APIView):
         operation_description="비밀번호 재설정 확인",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['new_password'],
+            required=["new_password"],
             properties={
-                'new_password': openapi.Schema(type=openapi.TYPE_STRING, description="새로운 비밀번호"),
+                "new_password": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="새로운 비밀번호"
+                ),
             },
         ),
         manual_parameters=[
-            openapi.Parameter('token', openapi.IN_QUERY, description="비밀번호 재설정 토큰", type=openapi.TYPE_STRING),
+            openapi.Parameter(
+                "token",
+                openapi.IN_QUERY,
+                description="비밀번호 재설정 토큰",
+                type=openapi.TYPE_STRING,
+            ),
         ],
         responses={
             200: openapi.Response(
                 description="비밀번호 재설정 성공",
                 examples={
-                    "application/json": {"detail": "비밀번호가 성공적으로 변경되었습니다."}
+                    "application/json": {
+                        "detail": "비밀번호가 성공적으로 변경되었습니다."
+                    }
                 },
             ),
             400: "잘못된 토큰 또는 만료된 토큰",
@@ -763,6 +800,7 @@ class CookieAuthentication(BasePermission):
 
 class UserAccountView(APIView):
     permission_classes = [CookieAuthentication]
+
     @swagger_auto_schema(
         operation_description="회원 탈퇴",
         responses={
