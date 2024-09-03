@@ -327,11 +327,11 @@ class CategoryListView(APIView):
 class CategoryDetailView(APIView):
     """
     카테고리 목록 조회 API 
-    모든 카테고리와 그에 속한 하위 카테고리 목록을 제공합니다.
+    특정 카테고리와 그에 속한 하위 카테고리 목록을 제공합니다.
     """
 
     @swagger_auto_schema(
-        operation_description="모든 카테고리 조회",
+        operation_description="특정 카테고리 조회",
         responses={
             200: openapi.Response(
                 description="카테고리 조회 성공",

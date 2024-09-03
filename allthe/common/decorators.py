@@ -1,4 +1,5 @@
 from functools import wraps
+from rest_framework.response import Response
 
 from accounts.models import User
 from contents.models import Content
@@ -30,13 +31,11 @@ def analyst_required(view_func):
     return _wrapped_view
 
 
-def admin_required(view_func):
-    @wraps(view_func)
+def admin_required(func):
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated or not request.user.is_staff:
-            return JsonResponse({"error": "관리자 권한이 필요합니다."}, status=403)
-        return view_func(request, *args, **kwargs)
-
+            return Response({"error": "인증 실패 또는 권한 없음"}, status=403)
+        return func(request, *args, **kwargs)
     return _wrapped_view
 
 
