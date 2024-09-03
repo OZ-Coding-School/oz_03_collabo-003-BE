@@ -603,6 +603,7 @@ class KakaoCallback(APIView):
             httponly=True,
             secure=True,
             samesite="Lax",
+            domain=".allthe.store",
         )
         response.set_cookie(
             "kakao_access_token",
@@ -611,6 +612,7 @@ class KakaoCallback(APIView):
             httponly=True,
             secure=True,
             samesite="Lax",
+            domain=".allthe.store",
         )
 
         return response
@@ -759,6 +761,7 @@ class GoogleCallback(APIView):
             httponly=True,
             secure=True,
             samesite="Lax",
+            domain=".allthe.store",
         )
         response.set_cookie(
             "google_access_token",
@@ -767,6 +770,7 @@ class GoogleCallback(APIView):
             httponly=True,
             secure=True,
             samesite="Lax",
+            domain=".allthe.store",
         )
 
         return response
@@ -913,6 +917,7 @@ class NaverCallback(APIView):
             httponly=True,
             secure=True,
             samesite="Lax",
+            domain=".allthe.store",
         )
         response.set_cookie(
             "naver_access_token",
@@ -921,6 +926,7 @@ class NaverCallback(APIView):
             httponly=True,
             secure=True,
             samesite="Lax",
+            domain=".allthe.store",
         )
 
         return response
