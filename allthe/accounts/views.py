@@ -407,7 +407,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"https://localhost:5173/password-reset?token={token}"
+        reset_url = f"https://localhost:5173/password-reset/confirm?token={token}"
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
@@ -424,6 +424,47 @@ class PasswordResetView(APIView):
         )
 
         return Response({"detail": "비밀번호 재설정 링크가 이메일로 전송되었습니다."})
+
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        """
+        비밀번호 재설정 API
+        - 비밀번호 재설정 토큰을 URL 파라미터로 받고 새 비밀번호로 업데이트합니다.
+        """
+        # URL 파라미터에서 토큰 읽기
+        token = request.query_params.get("token")
+        new_password = request.data.get("new_password")
+
+        if not token or not new_password:
+            return Response(
+                {"detail": "토큰과 새 비밀번호가 필요합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            return Response(
+                {"detail": "토큰이 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except jwt.InvalidTokenError:
+            return Response(
+                {"detail": "유효하지 않은 토큰입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.filter(id=payload["id"], email=payload["email"]).first()
+        if not user:
+            return Response(
+                {"detail": "유효하지 않은 사용자입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."})
 
 
 class CookieAuthentication(BasePermission):
