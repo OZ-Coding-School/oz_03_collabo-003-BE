@@ -236,4 +236,4 @@ SIMPLE_JWT = {
 }
 
 
-CSRF_TRUSTED_ORIGINS = ['https://api.allthe.store'] #Admin 페이지 접속을 위한 추가
+CSRF_TRUSTED_ORIGINS = ["https://api.allthe.store"]  # Admin 페이지 접속을 위한 추가
