@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("contents", "0005_remove_content_images_contentimage_content_and_more"),
     ]
