@@ -671,7 +671,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"http://127.0.0.1:8000/accounts/password-reset?token={token}"
+        reset_url = f"http:/api.allthe.store/accounts/password-reset?token={token}"
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
@@ -725,12 +725,8 @@ class PasswordResetConfirmView(APIView):
     def post(self, request):
         """
         비밀번호 재설정 API
-        - 비밀번호 재설정 토큰과 새 비밀번호를 요청 본문에서 받습니다.
+        - 비밀번호 재설정 토큰은 URL에서, 새 비밀번호는 요청 본문에서 받습니다.
         """
-        # 요청 본문에서 토큰과 새 비밀번호 읽기
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # URL에서 토큰 추출
         token = request.query_params.get("token")
@@ -748,7 +744,20 @@ class PasswordResetConfirmView(APIView):
 
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            user_id = payload["id"]  # 사용자 ID만 추출
+            user_id = payload["id"]
+
+            # 사용자 조회
+            user = User.objects.get(id=user_id)
+
+            # 비밀번호 설정
+            user.set_password(new_password)
+            user.save()
+
+            return Response(
+                {"detail": "비밀번호가 성공적으로 재설정되었습니다."},
+                status=status.HTTP_200_OK,
+            )
+
         except jwt.ExpiredSignatureError:
             return Response(
                 {"detail": "토큰이 만료되었습니다."}, status=status.HTTP_400_BAD_REQUEST
@@ -758,21 +767,11 @@ class PasswordResetConfirmView(APIView):
                 {"detail": "유효하지 않은 토큰입니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        user = User.objects.get(id=user_id)  # 사용자 ID로 사용자 조회
-        if not user:
+        except User.DoesNotExist:
             return Response(
-                {"detail": "유효하지 않은 사용자입니다."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "해당 이메일을 가진 사용자가 존재하지 않습니다"},
+                status=status.HTTP_404_NOT_FOUND,
             )
-
-        user.set_password(new_password)
-        user.save()
-
-        return Response(
-            {"detail": "비밀번호가 성공적으로 변경되었습니다."},
-            status=status.HTTP_200_OK,
-        )
 
 
 class CookieAuthentication(BasePermission):
