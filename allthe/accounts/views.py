@@ -77,6 +77,34 @@ class CookieAuthentication(BasePermission):
             raise AuthenticationFailed("User not found.")
 
 
+class MeView(APIView):
+    """
+    로그인한 사용자 자신의 정보를 조회하는 API
+    """
+
+    permission_classes = [IsAuthenticated, CookieAuthentication]
+
+    @swagger_auto_schema(
+        operation_description="로그인한 사용자 정보 조회",
+        responses={
+            200: openapi.Response(
+                description="로그인한 사용자 정보",
+                schema=UserSerializer,  # UserSerializer를 스키마로 사용
+            ),
+            401: openapi.Response(
+                description="인증되지 않은 사용자",
+            ),
+        },
+    )
+    def get(self, request):
+        user = request.user
+
+        # 사용자 정보 직렬화
+        serializer = UserSerializer(user)
+
+        return Response(serializer.data)
+
+
 class UsernameCheckView(APIView):
     @swagger_auto_schema(
         operation_description="사용자 이름 중복 확인",
