@@ -959,7 +959,7 @@ class KakaoCallback(APIView):
         )  # Use HttpResponseRedirect for redirection
 
         response.set_cookie(
-            "jwt_access_token",
+            "jwt",
             jwt_access_token,
             max_age=3600,  # 1 hour
             httponly=True,
@@ -1009,7 +1009,7 @@ class KakaoLogout(APIView):
 
         response = HttpResponse({"message": "Logged out successfully"})
         response.delete_cookie("kakao_access_token")
-        response.delete_cookie("jwt_access_token")
+        response.delete_cookie("jwt")
         return response
 
 
@@ -1117,7 +1117,7 @@ class GoogleCallback(APIView):
         )  # Use HttpResponseRedirect for redirection
 
         response.set_cookie(
-            "jwt_access_token",
+            "jwt",
             jwt_access_token,
             max_age=3600,  # 1 hour
             httponly=True,
@@ -1163,7 +1163,7 @@ class GoogleLogout(APIView):
 
         response = Response({"message": "Logged out successfully"})
         response.delete_cookie("google_access_token")
-        response.delete_cookie("jwt_access_token")
+        response.delete_cookie("jwt")
         return response
 
 
@@ -1273,7 +1273,7 @@ class NaverCallback(APIView):
         )  # Use HttpResponseRedirect for redirection
 
         response.set_cookie(
-            "jwt_access_token",
+            "jwt",
             jwt_access_token,
             max_age=3600,  # 1 hour
             httponly=True,
@@ -1325,7 +1325,7 @@ class NaverLogout(APIView):
 
         response = Response({"message": "Logged out successfully"})
         response.delete_cookie("naver_access_token")
-        response.delete_cookie("jwt_access_token")
+        response.delete_cookie("jwt")
         return response
 
 
