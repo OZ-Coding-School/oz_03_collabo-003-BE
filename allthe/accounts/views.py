@@ -4,6 +4,7 @@ import os
 import random
 
 import jwt
+import quote
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -695,7 +696,9 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"{settings.FRONTEND_URL}/password-reset?token={token}"
+        reset_url = (
+            f"{settings.FRONTEND_URL}/password-reset?email={quote(email)}&token={token}"
+        )
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
