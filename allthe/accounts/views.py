@@ -441,8 +441,8 @@ class UserLoginView(APIView):
         access_token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # Refresh Token 생성
-        refresh = RefreshToken.objects.create(user=user)
-        refresh_token = str(refresh.token)
+        refresh = RefreshToken.for_user(user)
+        refresh_token = str(refresh)
 
         response = Response(
             {
