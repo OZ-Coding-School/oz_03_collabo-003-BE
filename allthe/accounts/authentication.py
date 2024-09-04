@@ -1,9 +1,10 @@
-
+import jwt
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import BasePermission
-import jwt
+
 from .models import User  # User 모델 import 추가
+
 
 # Authentication Code
 class CookieAuthentication(BasePermission):
