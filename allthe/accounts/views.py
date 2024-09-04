@@ -950,7 +950,7 @@ class KakaoCallback(APIView):
         jwt_access_token = str(refresh.access_token)
 
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
         )
 
         # Create a response with cookies
@@ -1108,7 +1108,7 @@ class GoogleCallback(APIView):
 
         # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
         )
 
         # Create a response with cookies
@@ -1264,7 +1264,7 @@ class NaverCallback(APIView):
 
         # 리다이렉션 URL 생성
         redirect_url = (
-            f"{FRONT_DOMAIN}redirect?userId={user.id}&nickname={username}&email={email}"
+            f"{FRONT_DOMAIN}redirect?userId={user.id}&username={username}&email={email}"
         )
 
         # Create a response with cookies
