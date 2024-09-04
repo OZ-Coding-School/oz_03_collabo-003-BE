@@ -6,11 +6,13 @@ from .views import AnalysisRequestDetail
 from .views import AnalysisRequestList
 from .views import AnalystAcceptedRequestsList
 from .views import CheckAnalysisReport
+from .views import CreateAnalysisRequest
 from .views import SelectAnalyst
 from .views import UploadAnalysisReport
 
 urlpatterns = [
-    path("", AnalysisRequestList.as_view()),
+    path("", CreateAnalysisRequest.as_view()),
+    path("list", AnalysisRequestList.as_view()),
     path("<int:pk>", AnalysisRequestDetail.as_view()),
     path("accept/<int:pk>", AcceptAnalysisRequest.as_view()),
     path("client", AnalysisRequestList.as_view()),
