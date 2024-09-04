@@ -1,12 +1,16 @@
 import os
 
 import boto3
+import jwt
 from accounts.models import User
+from django.conf import settings
 from django.db import models
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -32,9 +36,36 @@ s3 = boto3.client(
 )
 
 
+# Authentication Code
+class CookieAuthentication(BasePermission):
+    def has_permission(self, request, view):
+        """
+        쿠키 기반 인증을 수행하는 권한 클래스
+        - 요청의 쿠키에서 JWT 토큰을 추출하고, 이를 검증하여 사용자 인증을 수행합니다.
+        """
+        token = request.COOKIES.get("jwt")
+        if not token:
+            return False
+
+        try:
+            # JWT 토큰 디코딩 및 검증
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            request.user = User.objects.get(id=payload["id"])
+            return True
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Token has expired.")
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed("Invalid token.")
+        except User.DoesNotExist:
+            raise AuthenticationFailed("User not found.")
+
+
 # 콘텐츠 업로드(post), 모든 콘텐츠 list(get)
 class UploadContent(APIView):
-    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+    permission_classes = [
+        IsAuthenticated,
+        CookieAuthentication,
+    ]  # 인증된 사용자만 접근 허용
 
     def post(self, request):
         data = request.data.copy()
@@ -95,7 +126,10 @@ class UploadContent(APIView):
 
 # 콘텐츠 수정(PATCH) API
 class UpdateContent(APIView):
-    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+    permission_classes = [
+        IsAuthenticated,
+        CookieAuthentication,
+    ]  # 인증된 사용자만 접근 허용
 
     # APIView를 상속받아 UpdateContent 클래스를 정의
     @swagger_auto_schema(
@@ -185,7 +219,10 @@ class UpdateContent(APIView):
 # 콘텐츠 삭제(DELETE) API
 class DeleteContent(APIView):
     # APIView를 상속받아 DeleteContent 클래스를 정의
-    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+    permission_classes = [
+        IsAuthenticated,
+        CookieAuthentication,
+    ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
         responses={
@@ -220,7 +257,10 @@ class DeleteContent(APIView):
 
 
 class AddReview(APIView):
-    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+    permission_classes = [
+        IsAuthenticated,
+        CookieAuthentication,
+    ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
         request_body=ReviewSerializer,
@@ -255,7 +295,7 @@ class AddReview(APIView):
 
 
 class UpdateReview(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CookieAuthentication]
 
     @swagger_auto_schema(
         request_body=ReviewSerializer,
@@ -293,7 +333,7 @@ class UpdateReview(APIView):
 
 
 class DeleteReview(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CookieAuthentication]
 
     @swagger_auto_schema(
         responses={
@@ -340,7 +380,7 @@ class Wishlist(models.Model):
 
 
 class ToggleLike(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CookieAuthentication]
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -390,7 +430,7 @@ class ToggleLike(APIView):
 
 
 class LikedContentList(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CookieAuthentication]
 
     @swagger_auto_schema(
         responses={
@@ -408,7 +448,10 @@ class LikedContentList(APIView):
 
 # QnA 목록을 조회
 class QnAList(APIView):
-    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+    permission_classes = [
+        IsAuthenticated,
+        CookieAuthentication,
+    ]  # 인증된 사용자만 접근 허용
 
     def get(self, request, content_id):
         # URL에서 콘텐츠 ID 가져오기
@@ -421,7 +464,10 @@ class QnAList(APIView):
 
 # QnA 생성
 class QnACreate(APIView):
-    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 허용
+    permission_classes = [
+        IsAuthenticated,
+        CookieAuthentication,
+    ]  # 인증된 사용자만 접근 허용
 
     def post(self, request, format=None):
         data = request.data.copy()  # 요청 데이터 복사
