@@ -103,6 +103,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    비밀번호 재설정 확인 직렬화기
+    - 사용자가 비밀번호 재설정을 할때 새로운 이메일을 수집합니다."
+    """
+
     new_password = serializers.CharField(write_only=True, min_length=8)
 
 
