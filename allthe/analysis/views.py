@@ -34,10 +34,35 @@ s3 = boto3.client(
 )
 
 
+# Authentication Code
+class CookieAuthentication(BasePermission):
+    def has_permission(self, request, view):
+        """
+        쿠키 기반 인증을 수행하는 권한 클래스
+        - 요청의 쿠키에서 JWT 토큰을 추출하고, 이를 검증하여 사용자 인증을 수행합니다.
+        """
+        token = request.COOKIES.get("jwt")
+        if not token:
+            return False
+
+        try:
+            # JWT 토큰 디코딩 및 검증
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            request.user = User.objects.get(id=payload["id"])
+            return True
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Token has expired.")
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed("Invalid token.")
+        except User.DoesNotExist:
+            raise AuthenticationFailed("User not found.")
+
+
 # 의뢰요청(post)
 class CreateAnalysisRequest(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -72,6 +97,7 @@ class CreateAnalysisRequest(APIView):
 class AnalysisRequestList(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -109,6 +135,7 @@ class AnalysisRequestList(APIView):
 class AnalysisRequestDetail(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -145,6 +172,7 @@ class AnalysisRequestDetail(APIView):
 class AcceptAnalysisRequest(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -209,6 +237,7 @@ class AcceptAnalysisRequest(APIView):
 class AnalysisRequestList(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -244,6 +273,7 @@ class AnalysisRequestList(APIView):
 class AcceptedAnalystsList(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -289,6 +319,7 @@ class AcceptedAnalystsList(APIView):
 class SelectAnalyst(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -383,6 +414,7 @@ class SelectAnalyst(APIView):
 class AnalystAcceptedRequestsList(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -420,6 +452,7 @@ class AnalystAcceptedRequestsList(APIView):
 class UploadAnalysisReport(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -537,6 +570,7 @@ class UploadAnalysisReport(APIView):
 class CheckAnalysisReport(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -609,6 +643,7 @@ class CheckAnalysisReport(APIView):
 class AnalystListCreate(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     @swagger_auto_schema(
@@ -666,6 +701,7 @@ class AnalystListCreate(APIView):
 class AnalystDetail(APIView):
     permission_classes = [
         IsAuthenticated,
+        CookieAuthentication,
     ]  # 인증된 사용자만 접근 허용
 
     def get_object(self, pk):
