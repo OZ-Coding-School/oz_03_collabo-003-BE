@@ -13,6 +13,7 @@ from .views import GoogleLogout
 from .views import KakaoCallback
 from .views import KakaoLogin
 from .views import KakaoLogout
+from .views import MeView
 from .views import NaverCallback
 from .views import NaverLogin
 from .views import NaverLogout
@@ -27,7 +28,6 @@ from .views import UserLogoutView
 from .views import UsernameCheckView
 from .views import UserProfileView
 from .views import VerifyCodeView
-from .views import MeView
 
 schema_view = get_schema_view(
     openapi.Info(
