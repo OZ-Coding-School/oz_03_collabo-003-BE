@@ -93,7 +93,7 @@ class RefreshToken(models.Model):
     )  # 유니크한 UUID 토큰
     created_at = models.DateTimeField(auto_now_add=True)  # 토큰 생성 일자
     expires_at = models.DateTimeField()  # 토큰 만료 일자
-
+    objects=models.Manager()
     def is_expired(self):
         """
         리프레시 토큰이 만료되었는지 확인합니다.
