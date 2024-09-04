@@ -44,7 +44,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     # 사용자 관련 API
-    path("profile/", MeView.as_view(), name='user-info'),
+    path("profile/", MeView.as_view(), name="user-info"),
     path("register/", FinalSignupView.as_view(), name="user-register"),
     path("login/", UserLoginView.as_view(), name="user-login"),
     path("profile/", UserProfileView.as_view(), name="user-profile"),
