@@ -21,9 +21,7 @@ class CategoryView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                "name": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="카테고리 이름"
-                ),
+                "name": openapi.Schema(type=openapi.TYPE_STRING, description="카테고리 이름"),
             },
         ),
         responses={
@@ -43,9 +41,7 @@ class CategoryView(APIView):
         """
         name = request.data.get("name")
         if not name:
-            return Response(
-                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         category = Category.objects.create(name=name)
         return Response(
@@ -57,9 +53,7 @@ class CategoryView(APIView):
         responses={
             200: openapi.Response(
                 description="카테고리 삭제 성공",
-                examples={
-                    "application/json": {"message": "카테고리가 삭제되었습니다."}
-                },
+                examples={"application/json": {"message": "카테고리가 삭제되었습니다."}},
             ),
             404: "카테고리를 찾을 수 없음",
             401: "인증 실패",
@@ -74,9 +68,7 @@ class CategoryView(APIView):
         try:
             category = Category.objects.get(id=category_id)
             category.delete()
-            return Response(
-                {"message": "카테고리가 삭제되었습니다."}, status=status.HTTP_200_OK
-            )
+            return Response({"message": "카테고리가 삭제되었습니다."}, status=status.HTTP_200_OK)
         except Category.DoesNotExist:
             return Response(
                 {"error": "카테고리를 찾을 수 없습니다."},
@@ -119,9 +111,7 @@ class CategoryView(APIView):
 
         name = request.data.get("name")
         if not name:
-            return Response(
-                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         category.name = name
         category.save()
@@ -170,9 +160,7 @@ class SubCategoryView(APIView):
         """
         name = request.data.get("name")
         if not name:
-            return Response(
-                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             parent_category = Category.objects.get(id=category_id)
@@ -197,9 +185,7 @@ class SubCategoryView(APIView):
         responses={
             200: openapi.Response(
                 description="하위 카테고리 삭제 성공",
-                examples={
-                    "application/json": {"message": "하위 카테고리가 삭제되었습니다."}
-                },
+                examples={"application/json": {"message": "하위 카테고리가 삭제되었습니다."}},
             ),
             404: "카테고리를 찾을 수 없음",
             401: "인증 실패",
@@ -266,9 +252,7 @@ class SubCategoryView(APIView):
 
         name = request.data.get("name")
         if not name:
-            return Response(
-                {"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "이름은 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         subcategory.name = name
         subcategory.save()
@@ -334,9 +318,7 @@ class CategoryDetailView(APIView):
     @swagger_auto_schema(
         operation_description="특정 카테고리 조회",
         responses={
-            200: openapi.Response(
-                description="카테고리 조회 성공", schema=CategorySerializer
-            ),
+            200: openapi.Response(description="카테고리 조회 성공", schema=CategorySerializer),
         },
     )
     def get(self, request, category_id):

@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("contents", "0006_content_likes_count_content_views_count_and_more"),
     ]

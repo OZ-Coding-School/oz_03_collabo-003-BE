@@ -22,7 +22,7 @@ class Content(models.Model):
     content = models.TextField()
     main_category = models.TextField()
     semi_category = models.TextField()
-    thumbnail = models.ImageField(upload_to="images/", blank=True, null=True)
+    thumbnail = models.TextField(blank=True, null=True)
     site_url = models.CharField(max_length=255)
     site_description = models.TextField(blank=True, null=True)
     is_analyzed = models.BooleanField(default=False)
@@ -37,7 +37,7 @@ class ContentImage(models.Model):
     content = models.ForeignKey(
         Content, on_delete=models.CASCADE, blank=True, null=True, related_name="images"
     )
-    file = models.ImageField(upload_to="images/", blank=True, null=True)
+    file = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
 

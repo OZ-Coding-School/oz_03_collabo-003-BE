@@ -23,6 +23,7 @@ from .serializers import LikeSerializer
 from .serializers import QnASerializer
 from .serializers import ReviewSerializer
 
+bucket_name = "allthe"
 s3 = boto3.client(
     "s3",
     endpoint_url="https://kr.object.ncloudstorage.com",
@@ -40,6 +41,24 @@ class UploadContent(APIView):
         user = request.user
         data["user"] = user.id
 
+        thumbnail = request.FILES.get("thumbnail")
+        if thumbnail:
+            thumbnail_id = str(uuid.uuid4())
+            file_extension = thumbnail.name.split(".")[-1]
+            thumbnail_name = f"{thumbnail_id}.{file_extension}"
+            thumbnail_s3_key = f"thumbnails/{thumbnail_name}"
+            try:
+                s3.upload_fileobj(thumbnail.file, bucket_name, thumbnail_s3_key)
+                s3.put_object_acl(
+                    ACL="public-read", Bucket=bucket_name, Key=thumbnail_s3_key
+                )
+                data[
+                    "thumbnail"
+                ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
+            except Exception as e:
+                print(e)
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = ContentSerializer(data=data, context={"request": request})
         if serializer.is_valid():
             content = serializer.save()
@@ -47,7 +66,20 @@ class UploadContent(APIView):
             # 요청 파일에서 이미지를 추출하여 ContentImage 모델에 저장
             images = request.FILES.getlist("images")
             for image in images:
-                ContentImage.objects.create(content=content, file=image)
+                image_id = str(uuid.uuid4())
+                file_extension = image.name.split(".")[-1]
+                image_name = f"{image_id}.{file_extension}"
+                s3_key = f"images/{image_name}"
+                ContentImage.objects.create(
+                    content=content,
+                    file=f"https://kr.object.ncloudstorage.com/{bucket_name}/{s3_key}",
+                )
+                try:
+                    s3.upload_fileobj(image.file, bucket_name, s3_key)
+                    s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=s3_key)
+                except Exception as e:
+                    print(e)
+                    return Response({"error": str(e)}, status=400)
 
             # Content 객체를 다시 직렬화하여 반환
             content_serializer = ContentSerializer(content)
