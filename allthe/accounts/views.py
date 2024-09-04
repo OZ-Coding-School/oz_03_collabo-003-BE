@@ -505,10 +505,10 @@ class UserLogoutView(APIView):
         },
     )
     def post(self, request):
-        """
-        로그아웃 API
-        - JWT 토큰 및 리프레시 토큰 쿠키를 삭제하여 로그아웃 처리
-        """
+        user = request.user
+        # 리프레시 토큰 모델에서 해당 사용자의 리프레시 토큰을 삭제
+        RefreshToken.objects.filter(user=user).delete()
+
         response = Response({"message": "Successfully logged out"})
         response.delete_cookie("jwt")
         response.delete_cookie("refresh_token")
@@ -671,7 +671,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"https://api.allthe.store/password-reset?token={token}"
+        reset_url = f"{settings.FRONTEND_URL}/password-reset?token={token}"
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
