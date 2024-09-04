@@ -71,7 +71,9 @@ class UsernameCheckView(APIView):
             ),
             400: openapi.Response(
                 description="이미 존재하는 사용자 이름",
-                examples={"application/json": {"message": "이미 존재하는 닉네임입니다."}},
+                examples={
+                    "application/json": {"message": "이미 존재하는 닉네임입니다."}
+                },
             ),
         },
     )
@@ -118,7 +120,9 @@ class EmailCheckView(APIView):
             ),
             400: openapi.Response(
                 description="이미 존재하는 이메일",
-                examples={"application/json": {"message": "이미 존재하는 이메일입니다."}},
+                examples={
+                    "application/json": {"message": "이미 존재하는 이메일입니다."}
+                },
             ),
         },
     )
@@ -158,7 +162,11 @@ class SendVerificationCodeView(APIView):
         responses={
             200: openapi.Response(
                 description="인증 코드 전송 성공",
-                examples={"application/json": {"detail": "인증 코드가 이메일로 전송되었습니다."}},
+                examples={
+                    "application/json": {
+                        "detail": "인증 코드가 이메일로 전송되었습니다."
+                    }
+                },
             ),
             400: "잘못된 요청",
         },
@@ -170,7 +178,9 @@ class SendVerificationCodeView(APIView):
 
             # 이메일로 인증 코드 생성 및 저장
             verification_code = str(random.randint(100000, 999999))
-            expires_at = timezone.now() + datetime.timedelta(minutes=10)  # 코드 만료 시간 설정
+            expires_at = timezone.now() + datetime.timedelta(
+                minutes=10
+            )  # 코드 만료 시간 설정
 
             # 인증 코드 저장
             VerificationCode.objects.update_or_create(
@@ -205,7 +215,9 @@ class VerifyCodeView(APIView):
             type=openapi.TYPE_OBJECT,
             required=["email", "verification_code"],
             properties={
-                "email": openapi.Schema(type=openapi.TYPE_STRING, description="이메일 주소"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="이메일 주소"
+                ),
                 "verification_code": openapi.Schema(
                     type=openapi.TYPE_STRING, description="확인할 인증 코드"
                 ),
@@ -214,7 +226,9 @@ class VerifyCodeView(APIView):
         responses={
             200: openapi.Response(
                 description="인증 코드 확인 성공",
-                examples={"application/json": {"detail": "인증 코드가 확인되었습니다."}},
+                examples={
+                    "application/json": {"detail": "인증 코드가 확인되었습니다."}
+                },
             ),
             400: openapi.Response(
                 description="잘못된 인증 코드 또는 만료된 코드",
@@ -268,7 +282,9 @@ class FinalSignupView(APIView):
                 "username": openapi.Schema(
                     type=openapi.TYPE_STRING, description="사용자 이름"
                 ),
-                "email": openapi.Schema(type=openapi.TYPE_STRING, description="이메일 주소"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="이메일 주소"
+                ),
                 "verification_code": openapi.Schema(
                     type=openapi.TYPE_STRING, description="인증 코드"
                 ),
@@ -347,7 +363,9 @@ class UserLoginView(APIView):
             type=openapi.TYPE_OBJECT,
             required=["email", "password"],
             properties={
-                "email": openapi.Schema(type=openapi.TYPE_STRING, description="이메일 주소"),
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="이메일 주소"
+                ),
                 "password": openapi.Schema(
                     type=openapi.TYPE_STRING, description="비밀번호"
                 ),
@@ -618,7 +636,11 @@ class PasswordResetView(APIView):
         responses={
             200: openapi.Response(
                 description="비밀번호 재설정 링크 전송 성공",
-                examples={"application/json": {"detail": "비밀번호 재설정 링크가 이메일로 전송되었습니다."}},
+                examples={
+                    "application/json": {
+                        "detail": "비밀번호 재설정 링크가 이메일로 전송되었습니다."
+                    }
+                },
             ),
             404: "사용자를 찾을 수 없음",
         },
@@ -691,7 +713,11 @@ class PasswordResetConfirmView(APIView):
         responses={
             200: openapi.Response(
                 description="비밀번호 재설정 성공",
-                examples={"application/json": {"detail": "비밀번호가 성공적으로 변경되었습니다."}},
+                examples={
+                    "application/json": {
+                        "detail": "비밀번호가 성공적으로 변경되었습니다."
+                    }
+                },
             ),
             400: "잘못된 토큰 또는 만료된 토큰",
         },

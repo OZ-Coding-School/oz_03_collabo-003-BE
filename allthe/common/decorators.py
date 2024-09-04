@@ -47,7 +47,9 @@ def author_required(view_func):
     def _wrapped_view(request, content_id, *args, **kwargs):
         content = get_object_or_404(Content, pk=content_id)
         if content.user != request.user:
-            return JsonResponse({"error": "작성자만 수정/삭제할 수 있습니다."}, status=403)
+            return JsonResponse(
+                {"error": "작성자만 수정/삭제할 수 있습니다."}, status=403
+            )
         return view_func(request, content_id, *args, **kwargs)
 
     return _wrapped_view
