@@ -2,6 +2,7 @@ import os
 
 import boto3
 import jwt
+from accounts.authentication import CookieAuthentication
 from accounts.models import User
 from django.conf import settings
 from django.db import models
@@ -14,8 +15,6 @@ from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from accounts.authentication import CookieAuthentication
 
 from .models import Content
 from .models import ContentImage
@@ -298,7 +297,7 @@ class AddReview(APIView):
 
 class UpdateReview(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieAuthentication] # 필요하다면 추가
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     @swagger_auto_schema(
         request_body=ReviewSerializer,
@@ -337,7 +336,7 @@ class UpdateReview(APIView):
 
 class DeleteReview(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieAuthentication] # 필요하다면 추가
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     @swagger_auto_schema(
         responses={
@@ -385,7 +384,7 @@ class Wishlist(models.Model):
 
 class ToggleLike(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieAuthentication] # 필요하다면 추가
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -436,7 +435,7 @@ class ToggleLike(APIView):
 
 class LikedContentList(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieAuthentication] # 필요하다면 추가
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     @swagger_auto_schema(
         responses={

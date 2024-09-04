@@ -6,9 +6,7 @@ import random
 import jwt
 import quote
 import requests
-
 from accounts.authentication import CookieAuthentication
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -86,7 +84,7 @@ class MeView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieAuthentication] # 필요하다면 추가
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     @swagger_auto_schema(
         operation_description="로그인한 사용자 정보 조회",
@@ -574,7 +572,7 @@ class UserLogoutView(APIView):
 
 class RefreshTokenView(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieAuthentication] # 필요하다면 추가
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     @swagger_auto_schema(
         operation_description="액세스 토큰 갱신",
@@ -634,7 +632,7 @@ class RefreshTokenView(APIView):
 
 class UpdateRoleView(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [CookieAuthentication] # 필요하다면 추가
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     @swagger_auto_schema(
         operation_description="사용자 역할 업데이트",

@@ -1,7 +1,8 @@
-from django.conf import settings
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.authentication import BaseAuthentication
 import jwt
+from django.conf import settings
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+
 from .models import User
 
 
@@ -13,7 +14,7 @@ class CookieAuthentication(BaseAuthentication):
         """
         token = request.COOKIES.get("jwt")
         if not token:
-            return None 
+            return None
 
         try:
             # JWT 토큰 디코딩 및 검증
