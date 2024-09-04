@@ -695,7 +695,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"https://localhost:5173/password-reset?token={token}"
+        reset_url = f"https://api.allthe.store/password-reset?token={token}"
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
