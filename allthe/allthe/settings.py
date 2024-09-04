@@ -75,6 +75,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         #'rest_framework.authentication.TokenAuthentication',
+        "accounts.authentication.CookieAuthentication",  # 커스텀 쿠키 인증
     ),
 }
 
