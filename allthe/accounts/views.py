@@ -52,7 +52,7 @@ NAVER_URI = os.getenv("NAVER_URI")
 FRONT_DOMAIN = os.getenv("FRONT_DOMAIN")
 
 
-#Authentication Code
+# Authentication Code
 class CookieAuthentication(BasePermission):
     def has_permission(self, request, view):
         """
@@ -74,6 +74,7 @@ class CookieAuthentication(BasePermission):
             raise AuthenticationFailed("Invalid token.")
         except User.DoesNotExist:
             raise AuthenticationFailed("User not found.")
+
 
 class UsernameCheckView(APIView):
     @swagger_auto_schema(
@@ -1375,7 +1376,10 @@ class CheckBusinessStatusView(View):
 
 # 통합로그아웃
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated, CookieAuthentication]  # 인증된 사용자만 접근 허용
+    permission_classes = [
+        IsAuthenticated,
+        CookieAuthentication,
+    ]  # 인증된 사용자만 접근 허용
 
     def post(self, request):
         if request.user.social_provider == "kakao":
