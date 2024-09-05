@@ -1,6 +1,7 @@
 import os
 
 import boto3
+import uuid
 import jwt
 from accounts.authentication import CookieAuthentication
 from accounts.models import User
@@ -84,9 +85,9 @@ class UploadContent(APIView):
                 s3.put_object_acl(
                     ACL="public-read", Bucket=bucket_name, Key=thumbnail_s3_key
                 )
-                data["thumbnail"] = (
-                    f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
-                )
+                data[
+                    "thumbnail"
+                ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
             except Exception as e:
                 print(e)
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
