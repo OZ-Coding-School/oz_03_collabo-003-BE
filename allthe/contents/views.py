@@ -126,10 +126,8 @@ class UploadContent(APIView):
 
 # 콘텐츠 수정(PATCH) API
 class UpdateContent(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        CookieAuthentication,
-    ]  # 인증된 사용자만 접근 허용
+    permission_classes = [IsAuthenticated]  # 권한 클래스만 포함
+    authentication_classes = [CookieAuthentication]  # 인증 클래스 추가
 
     # APIView를 상속받아 UpdateContent 클래스를 정의
     @swagger_auto_schema(
@@ -219,10 +217,8 @@ class UpdateContent(APIView):
 # 콘텐츠 삭제(DELETE) API
 class DeleteContent(APIView):
     # APIView를 상속받아 DeleteContent 클래스를 정의
-    permission_classes = [
-        IsAuthenticated,
-        CookieAuthentication,
-    ]  # 인증된 사용자만 접근 허용
+    permission_classes = [IsAuthenticated]  # 권한 클래스만 포함
+    authentication_classes = [CookieAuthentication]  # 인증 클래스 추가
 
     @swagger_auto_schema(
         responses={
@@ -257,11 +253,8 @@ class DeleteContent(APIView):
 
 
 class AddReview(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        CookieAuthentication,
-    ]  # 인증된 사용자만 접근 허용
-
+    permission_classes = [IsAuthenticated]  # 권한 클래스만 포함
+    authentication_classes = [CookieAuthentication]  # 인증 클래스 추가
     @swagger_auto_schema(
         request_body=ReviewSerializer,
         responses={
