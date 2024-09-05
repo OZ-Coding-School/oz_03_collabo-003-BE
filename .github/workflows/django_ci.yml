@@ -43,6 +43,9 @@ jobs:
         PORTONE_APP_KEY=${{ secrets.PORTONE_APP_KEY }}
         PORTONE_SECRET=${{ secrets.PORTONE_SECRET }}
         PORTONE_CHANNEL_KEY=${{ secrets.PORTONE_CHANNEL_KEY }}
+        NCP_Access_Key=${{ secrets.NCP_Access_Key }}
+        NCP_Secret_Key=${{ secrets.NCP_Secret_Key }}
+        NCP_BUCKET_NAME=${{ secrets.NCP_BUCKET_NAME }}
         EOF
     
     - name: Install dependencies
@@ -143,6 +146,9 @@ jobs:
           PORTONE_APP_KEY=${{ secrets.PORTONE_APP_KEY }}
           PORTONE_SECRET=${{ secrets.PORTONE_SECRET }}
           PORTONE_CHANNEL_KEY=${{ secrets.PORTONE_CHANNEL_KEY }}
+          NCP_Access_Key=${{ secrets.NCP_Access_Key }}
+          NCP_Secret_Key=${{ secrets.NCP_Secret_Key }}
+          NCP_BUCKET_NAME=${{ secrets.NCP_BUCKET_NAME }}
           EOF
 
           # Create or update docker-compose.yml

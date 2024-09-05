@@ -126,92 +126,64 @@ class UploadContent(APIView):
 
 # 콘텐츠 수정(PATCH) API
 class UpdateContent(APIView):
-    permission_classes = [IsAuthenticated]  # 권한 클래스만 포함
-    authentication_classes = [CookieAuthentication]  # 인증 클래스 추가
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieAuthentication]
 
-    # APIView를 상속받아 UpdateContent 클래스를 정의
-    @swagger_auto_schema(
-        request_body=openapi.Schema(  # request_body를 사용하여 요청 데이터의 형식
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "title": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Title of the content"
-                ),
-                "content": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Content body"
-                ),
-                "category": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Category of the content"
-                ),
-                "site_url": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Site URL related to the content",
-                ),
-                "site_description": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Description of the site"
-                ),
-                "is_analyzed": openapi.Schema(
-                    type=openapi.TYPE_BOOLEAN, description="Is the content analyzed"
-                ),
-                "images": openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Schema(type=openapi.TYPE_FILE),
-                    description="Upload multiple images",
-                    default=[],
-                ),
-            },
-        ),
-        responses={  # responses를 사용하여 다양한 응답 상태 코드에 대한 설명을 추가
-            status.HTTP_200_OK: ContentsSerializer,
-            status.HTTP_400_BAD_REQUEST: openapi.Response("Bad Request"),
-            status.HTTP_404_NOT_FOUND: openapi.Response("Content Not Found"),
-            status.HTTP_403_FORBIDDEN: openapi.Response("Forbidden"),
-        },
-        operation_summary="Update existing content",
-        operation_description="This endpoint allows users to update an existing content object. Only non-analyst users can update content.",
-    )
-    def patch(self, request, pk):  # pk를 URL 경로에서 받아 콘텐츠를 검색
-        # 콘텐츠 객체 가져오기
+    def put(self, request, pk):
         try:
-            content = Content.objects.get(pk=pk)
+            content = Content.objects.get(id=pk)
         except Content.DoesNotExist:
-            # 콘텐츠가 존재하지 않으면 404 Not Found 응답을 반환
-            return Response(
-                {"error": "콘텐츠를 찾을 수 없습니다."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response({"error": "Content not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # 요청한 사용자가 의뢰자인지 확인
-        if request.user.role == "analyst":
-            return Response(
-                # 요청 사용자의 역할을 확인하여 권한이 없으면 403 Forbidden 응답을 반환
-                {"error": "분석가는 콘텐츠를 수정할 수 없습니다."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        # 기존 콘텐츠를 업데이트할 데이터
+        data = request.data.copy()
+        data["user"] = request.user.id
+        
+        # 수정할 썸네일 처리
+        thumbnail = request.FILES.get("thumbnail")
+        if thumbnail:
+            thumbnail_id = str(uuid.uuid4())
+            file_extension = thumbnail.name.split(".")[-1]
+            thumbnail_name = f"{thumbnail_id}.{file_extension}"
+            thumbnail_s3_key = f"thumbnails/{thumbnail_name}"
+            try:
+                s3.upload_fileobj(thumbnail.file, bucket_name, thumbnail_s3_key)
+                s3.put_object_acl(
+                    ACL="public-read", Bucket=bucket_name, Key=thumbnail_s3_key
+                )
+                data["thumbnail"] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
+            except Exception as e:
+                print(e)
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 요청 데이터에서 콘텐츠 정보를 가져옴
-        data = request.data.copy()  # request.data는 ImmutableMultiValueDict이므로 복사
+        # 기존 콘텐츠 업데이트
+        serializer = ContentSerializer(content, data=data, partial=True, context={"request": request})
+        if serializer.is_valid():
+            updated_content = serializer.save()
 
-        # 콘텐츠의 기본 정보 수정
-        content_serializer = ContentsSerializer(content, data=data, partial=True)
-        if not content_serializer.is_valid():
-            return Response(
-                content_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+            # 기존 이미지 삭제 및 새 이미지 저장
+            ContentImage.objects.filter(content=updated_content).delete()
+            images = request.FILES.getlist("images")
+            for image in images:
+                image_id = str(uuid.uuid4())
+                file_extension = image.name.split(".")[-1]
+                image_name = f"{image_id}.{file_extension}"
+                s3_key = f"images/{image_name}"
+                try:
+                    s3.upload_fileobj(image.file, bucket_name, s3_key)
+                    s3.put_object_acl(ACL="public-read", Bucket=bucket_name, Key=s3_key)
+                    ContentImage.objects.create(
+                        content=updated_content,
+                        file=f"https://kr.object.ncloudstorage.com/{bucket_name}/{s3_key}",
+                    )
+                except Exception as e:
+                    print(e)
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            # 콘텐츠 인스턴스 저장
-        updated_content = content_serializer.save()
+            content_serializer = ContentSerializer(updated_content)
+            return Response(content_serializer.data, status=status.HTTP_200_OK)
 
-        # 이미지 처리
-        if "images" in request.FILES:
-            image_files = request.FILES.getlist("images")
-            for image_file in image_files:
-                # Image 모델에 이미지 저장
-                image = Image.objects.create(file=image_file)
-                # Content 모델과 연결
-                updated_content.images.add(image)
-
-        return Response(content_serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 콘텐츠 삭제(DELETE) API
