@@ -93,7 +93,7 @@ class CreateAnalysisRequest(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AnalysisRequestList(APIView):
+class RequestList(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
