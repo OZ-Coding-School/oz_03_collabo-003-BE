@@ -446,11 +446,8 @@ class LikedContentList(APIView):
 
 # QnA 목록을 조회
 class QnAList(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        CookieAuthentication,
-    ]  # 인증된 사용자만 접근 허용
-
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
     def get(self, request, content_id):
         # URL에서 콘텐츠 ID 가져오기
         queryset = QnA.objects.filter(
@@ -462,10 +459,8 @@ class QnAList(APIView):
 
 # QnA 생성
 class QnACreate(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        CookieAuthentication,
-    ]  # 인증된 사용자만 접근 허용
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     def post(self, request, format=None):
         data = request.data.copy()  # 요청 데이터 복사
