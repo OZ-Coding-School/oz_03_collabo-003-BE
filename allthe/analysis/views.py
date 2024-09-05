@@ -3,6 +3,7 @@ import uuid
 
 import boto3
 import jwt
+from datetime import datetime
 from accounts.authentication import CookieAuthentication
 from accounts.models import User
 from django.conf import settings
@@ -519,6 +520,7 @@ class UploadAnalysisReport(APIView):
 
         # 의뢰 상태를 'COMPLETED'로 변경
         analysis_request.status = "COMPLETED"
+        analysis_request.completed_at = datetime.now()
         analysis_request.save()
 
         # 콘텐츠 분석상태 수정
