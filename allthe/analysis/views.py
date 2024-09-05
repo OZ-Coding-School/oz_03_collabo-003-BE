@@ -677,6 +677,7 @@ class AnalystDetail(APIView):
         responses={200: AnalystSerializer, 404: "Not found"},
     )
     def put(self, request, pk):
+        data = request.data.copy()
         analyst = Analyst.objects.get(user=pk)
         if analyst is not None:
             # 프로필 소유자인지 확인
@@ -696,7 +697,7 @@ class AnalystDetail(APIView):
                     s3.put_object_acl(
                         ACL="public-read", Bucket=bucket_name, Key=image_s3_key
                     )
-                    request[
+                    data[
                         "analyst_image"
                     ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{image_s3_key}"
                 except Exception as e:
@@ -705,7 +706,7 @@ class AnalystDetail(APIView):
                         {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
                     )
 
-            serializer = AnalystSerializer(analyst, data=request.data, partial=True)
+            serializer = AnalystSerializer(analyst, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
