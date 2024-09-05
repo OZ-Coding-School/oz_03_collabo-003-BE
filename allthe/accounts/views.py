@@ -4,7 +4,7 @@ import os
 import random
 
 import jwt
-import quote
+from urllib.parse import quote
 import requests
 from accounts.authentication import CookieAuthentication
 from django.conf import settings

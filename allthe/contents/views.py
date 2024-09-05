@@ -255,6 +255,7 @@ class DeleteContent(APIView):
 class AddReview(APIView):
     permission_classes = [IsAuthenticated]  # 권한 클래스만 포함
     authentication_classes = [CookieAuthentication]  # 인증 클래스 추가
+
     @swagger_auto_schema(
         request_body=ReviewSerializer,
         responses={
