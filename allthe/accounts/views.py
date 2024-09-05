@@ -1385,11 +1385,9 @@ class CheckBusinessStatusView(View):
 
 
 # 통합로그아웃
-class LogoutView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        CookieAuthentication,
-    ]  # 인증된 사용자만 접근 허용
+class TotalLogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [CookieAuthentication]  # 필요하다면 추가
 
     def post(self, request):
         if request.user.social_provider == "kakao":
