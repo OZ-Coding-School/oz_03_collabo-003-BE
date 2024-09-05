@@ -1,7 +1,7 @@
 import os
+import uuid
 
 import boto3
-import uuid
 import jwt
 from accounts.authentication import CookieAuthentication
 from accounts.models import User
@@ -64,10 +64,8 @@ s3 = boto3.client(
 
 # 콘텐츠 업로드(post), 모든 콘텐츠 list(get)
 class UploadContent(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        CookieAuthentication,
-    ]  # 인증된 사용자만 접근 허용
+    permission_classes = [IsAuthenticated]  # 권한 클래스만 포함
+    authentication_classes = [CookieAuthentication]  # 인증 클래스 추가
 
     def post(self, request):
         data = request.data.copy()
