@@ -177,6 +177,7 @@ class EmailCheckView(APIView):
             ),
         },
     )
+    #
     def post(self, request):
         serializer = EmailSerializer(data=request.data)
         if serializer.is_valid():
