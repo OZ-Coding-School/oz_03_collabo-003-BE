@@ -28,6 +28,7 @@ from .views import UserLogoutView
 from .views import UsernameCheckView
 from .views import UserProfileView
 from .views import VerifyCodeView
+from .views import TotalLogoutView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -49,6 +50,7 @@ urlpatterns = [
     path("login/", UserLoginView.as_view(), name="user-login"),
     path("profile/", UserProfileView.as_view(), name="user-profile"),
     path("logout/", UserLogoutView.as_view(), name="user-logout"),
+    path("total/logout/", TotalLogoutView.as_view(), name="total-logout"),
     path("refresh-token/", RefreshTokenView.as_view(), name="refresh-token"),
     path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
     path(
