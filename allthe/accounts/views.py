@@ -791,7 +791,7 @@ class PasswordResetConfirmView(APIView):
         token = request.query_params.get("token")
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        password = serializer.validated_data.get("new_password")
+        password = serializer.validated_data.get("password")
 
         if not token or not password:
             return Response(
