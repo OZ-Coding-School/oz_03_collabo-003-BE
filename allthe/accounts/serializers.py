@@ -109,7 +109,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     """
 
     token = serializers.CharField(required=True)
-    new_password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(write_only=True, min_length=8)
 
 
 # 닉네임 중복 검사
