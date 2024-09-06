@@ -791,9 +791,9 @@ class PasswordResetConfirmView(APIView):
         token = request.query_params.get("token")
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        new_password = serializer.validated_data.get("new_password")
+        password = serializer.validated_data.get("new_password")
 
-        if not token or not new_password:
+        if not token or not password:
             return Response(
                 {"detail": "토큰과 새 비밀번호가 필요합니다."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -813,7 +813,7 @@ class PasswordResetConfirmView(APIView):
                 )
 
             # 비밀번호 설정
-            user.set_password(new_password)
+            user.set_password(password)
             user.save()
 
             return Response(
