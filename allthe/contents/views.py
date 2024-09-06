@@ -83,9 +83,9 @@ class UploadContent(APIView):
                 s3.put_object_acl(
                     ACL="public-read", Bucket=bucket_name, Key=thumbnail_s3_key
                 )
-                data[
-                    "thumbnail"
-                ] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
+                data["thumbnail"] = (
+                    f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
+                )
             except Exception as e:
                 print(e)
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -133,12 +133,14 @@ class UpdateContent(APIView):
         try:
             content = Content.objects.get(id=pk)
         except Content.DoesNotExist:
-            return Response({"error": "Content not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Content not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # 기존 콘텐츠를 업데이트할 데이터
         data = request.data.copy()
         data["user"] = request.user.id
-        
+
         # 수정할 썸네일 처리
         thumbnail = request.FILES.get("thumbnail")
         if thumbnail:
@@ -151,13 +153,17 @@ class UpdateContent(APIView):
                 s3.put_object_acl(
                     ACL="public-read", Bucket=bucket_name, Key=thumbnail_s3_key
                 )
-                data["thumbnail"] = f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
+                data["thumbnail"] = (
+                    f"https://kr.object.ncloudstorage.com/{bucket_name}/{thumbnail_s3_key}"
+                )
             except Exception as e:
                 print(e)
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         # 기존 콘텐츠 업데이트
-        serializer = ContentSerializer(content, data=data, partial=True, context={"request": request})
+        serializer = ContentSerializer(
+            content, data=data, partial=True, context={"request": request}
+        )
         if serializer.is_valid():
             updated_content = serializer.save()
 
@@ -178,7 +184,9 @@ class UpdateContent(APIView):
                     )
                 except Exception as e:
                     print(e)
-                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
             content_serializer = ContentSerializer(updated_content)
             return Response(content_serializer.data, status=status.HTTP_200_OK)
