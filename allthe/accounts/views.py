@@ -729,7 +729,7 @@ class PasswordResetView(APIView):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
         # 비밀번호 재설정 URL 설정
-        reset_url = f"{settings.FRONTEND_URL}/password-reset/confirm?token={token}"
+        reset_url = f"{settings.FRONTEND_URL}/password-reset/confirm?email={quote(email)}&token={token}"
 
         # HTML 이메일 내용 생성
         html_message = render_to_string(
