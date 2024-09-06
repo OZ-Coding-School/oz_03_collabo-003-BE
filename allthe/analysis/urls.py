@@ -4,10 +4,10 @@ from .views import AcceptAnalysisRequest
 from .views import AcceptedAnalystsList
 from .views import AnalysisRequestDetail
 from .views import AnalysisRequestList
-from .views import RequestList
 from .views import AnalystAcceptedRequestsList
 from .views import CheckAnalysisReport
 from .views import CreateAnalysisRequest
+from .views import RequestList
 from .views import SelectAnalyst
 from .views import UploadAnalysisReport
 

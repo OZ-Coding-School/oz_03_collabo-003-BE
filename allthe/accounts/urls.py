@@ -21,6 +21,7 @@ from .views import PasswordResetConfirmView
 from .views import PasswordResetView
 from .views import RefreshTokenView
 from .views import SendVerificationCodeView
+from .views import TotalLogoutView
 from .views import UpdateRoleView
 from .views import UserAccountView
 from .views import UserLoginView
@@ -28,7 +29,6 @@ from .views import UserLogoutView
 from .views import UsernameCheckView
 from .views import UserProfileView
 from .views import VerifyCodeView
-from .views import TotalLogoutView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -54,7 +54,7 @@ urlpatterns = [
     path("refresh-token/", RefreshTokenView.as_view(), name="refresh-token"),
     path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
     path(
-        "password-reset",
+        "password-reset/confirm/",
         PasswordResetConfirmView.as_view(),
         name="password-reset-confirm",
     ),
