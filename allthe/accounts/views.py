@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import os
 import random
 from urllib.parse import quote
@@ -784,14 +785,10 @@ class PasswordResetConfirmView(APIView):
     )
     def post(self, request):
         """
-        비밀번호 재설정 API
-        - 비밀번호 재설정 토큰은 URL에서, 새 비밀번호는 요청 본문에서 받습니다.
+        비밀번호 재설정 확인 API
         """
 
-        # URL에서 토큰 추출
         token = request.query_params.get("token")
-
-        # 요청 본문에서 새 비밀번호 읽기
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         new_password = serializer.validated_data.get("new_password")
@@ -806,8 +803,14 @@ class PasswordResetConfirmView(APIView):
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             user_id = payload["id"]
 
-            # 사용자 조회
-            user = User.objects.get(id=user_id)
+            # 사용자 조회 (try-except 블록 추가하여 에러 처리)
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response(
+                    {"detail": "해당 사용자를 찾을 수 없습니다."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
             # 비밀번호 설정
             user.set_password(new_password)
@@ -827,10 +830,12 @@ class PasswordResetConfirmView(APIView):
                 {"detail": "유효하지 않은 토큰입니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except User.DoesNotExist:
+        except Exception as e:
+            # 예상치 못한 에러 발생 시
+            logging.error(f"비밀번호 재설정 중 오류 발생: {str(e)}")
             return Response(
-                {"detail": "해당 이메일을 가진 사용자가 존재하지 않습니다"},
-                status=status.HTTP_404_NOT_FOUND,
+                {"detail": "시스템 오류가 발생했습니다."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
