@@ -13,7 +13,6 @@ from .views import GoogleLogout
 from .views import KakaoCallback
 from .views import KakaoLogin
 from .views import KakaoLogout
-from .views import MeView
 from .views import NaverCallback
 from .views import NaverLogin
 from .views import NaverLogout
@@ -21,7 +20,6 @@ from .views import PasswordResetConfirmView
 from .views import PasswordResetView
 from .views import RefreshTokenView
 from .views import SendVerificationCodeView
-from .views import TotalLogoutView
 from .views import UpdateRoleView
 from .views import UserAccountView
 from .views import UserLoginView
@@ -45,16 +43,14 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     # 사용자 관련 API
-    path("profile/", MeView.as_view(), name="user-info"),
     path("register/", FinalSignupView.as_view(), name="user-register"),
     path("login/", UserLoginView.as_view(), name="user-login"),
     path("profile/", UserProfileView.as_view(), name="user-profile"),
     path("logout/", UserLogoutView.as_view(), name="user-logout"),
-    path("total/logout/", TotalLogoutView.as_view(), name="total-logout"),
     path("refresh-token/", RefreshTokenView.as_view(), name="refresh-token"),
     path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
     path(
-        "password-reset/confirm/",
+        "password-reset",
         PasswordResetConfirmView.as_view(),
         name="password-reset-confirm",
     ),
